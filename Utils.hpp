@@ -18,6 +18,12 @@
 static bool keys[1024]; // is a key pressed or not ?
                         // External static callback
                         // Is called whenever a key is pressed/released via GLFW
+static bool keysPressed[1024]; // is a key pressed or not ?
+
+static float mouseDeltaX = 0;
+static float mouseDeltaY = 0;
+static float prevMouseX = 0;
+static float prevMouseY = 0;
 
 float deltaTime = 0.0f;
 int width;
@@ -30,7 +36,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset);
 
 
-GLFWwindow* init_callbacks() {
+GLFWwindow* init_gl() {
     // Load GLFW and Create a Window
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -39,6 +45,8 @@ GLFWwindow* init_callbacks() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     auto mWindow = glfwCreateWindow(mWidth, mHeight, "Hello World !", nullptr, nullptr);
+    
+    //glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
     // Check for Valid Context
 //    if (mWindow == nullptr) {
@@ -60,6 +68,11 @@ GLFWwindow* init_callbacks() {
     // Change Viewport
     glfwGetFramebufferSize(mWindow, &width, &height);
     glViewport(0, 0, width, height);
+    
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
     
     return mWindow;
 }
@@ -85,8 +98,11 @@ static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int acti
 {
     if (action == GLFW_PRESS)
         keys[key] = true;
-    else if (action == GLFW_RELEASE)
+    else if (action == GLFW_RELEASE) {
         keys[key] = false;
+        keysPressed[key] = true;
+    }
+        
 
     if (keys[GLFW_KEY_ESCAPE])
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -128,6 +144,15 @@ static void mouse_button_callback(GLFWwindow* /*window*/, int button, int action
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+    mouseDeltaX = xpos - prevMouseX;
+    prevMouseX = xpos;
+    mouseDeltaY = ypos - prevMouseY;
+    prevMouseY = ypos;
+    if (xpos < 0 || xpos > width/2 || ypos < -20 || ypos > height/2) {
+        glfwSetCursorPos(window, width/4, height/4);
+        prevMouseX = width/4;
+        prevMouseY = height/4;
+    }
     if (keys[GLFW_MOUSE_BUTTON_RIGHT]) {
         std::cout << "Mouse Position : (" << xpos << ", " << ypos << ")" << std::endl;
     }
@@ -138,5 +163,13 @@ void scroll_callback(GLFWwindow* window, double /*xoffset*/, double yoffset)
     if (keys[GLFW_MOUSE_BUTTON_LEFT]) {
         std::cout << "Mouse Offset : " << yoffset << std::endl;
     }
+}
+
+void clearScreen() {
+    // Background Fill Color
+    glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    // Clear depth buffer
+    glClear(GL_DEPTH_BUFFER_BIT);
 }
 
