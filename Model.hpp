@@ -24,8 +24,9 @@ class Model
 public:
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
-    Model(GLchar* path)
+    Model(GLchar* path, bool normal)
     {
+        this->normal = false;
         this->loadModel(path);
     }
 
@@ -37,6 +38,7 @@ public:
     }
     
 private:
+    bool normal = true;
     /*  Model Data  */
     std::vector<Mesh> meshes;
     std::string directory;
@@ -99,10 +101,12 @@ private:
             vector.z = mesh->mVertices[i].z;
             vertex.Position = vector;
             // Normals
-            vector.x = mesh->mNormals[i].x;
-            vector.y = mesh->mNormals[i].y;
-            vector.z = mesh->mNormals[i].z;
-            vertex.Normal = vector;
+            if (this->normal) {
+                vector.x = mesh->mNormals[i].x;
+                vector.y = mesh->mNormals[i].y;
+                vector.z = mesh->mNormals[i].z;
+                vertex.Normal = vector;
+            }
             // Texture Coordinates
             if(mesh->mTextureCoords[0]) // Does the mesh contain texture coordinates?
             {

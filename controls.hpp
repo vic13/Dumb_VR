@@ -8,8 +8,9 @@ float hAngle = 0;
 float vAngle = 0;
 
 // camera speed and rotation speed
-float speedSlow = 0.1;
-float speedBoost = 1;
+float speedSlow = 0.01;
+float speedBoost = 0.05;
+float superSpeedBoost = 0.5;
 float speed = speedSlow;
 float rotationSpeed = 0.01;
 
@@ -27,7 +28,7 @@ glm::mat4 getMVP(glm::mat4 model);
 
 glm::mat4 getMVP(glm::mat4 model) {
     // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) width / (float)height, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) width / (float)height, 0.1f, 4000.0f);
       
     // Or, for an ortho camera :
     //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
@@ -44,6 +45,8 @@ glm::mat4 getMVP(glm::mat4 model) {
     glm::mat4 mvp = projection * view * model; // Remember, matrix multiplication is the other way around
     return mvp;
 }
+
+
 void updateCameraPosition() {
     glm::vec3 planeDirection = glm::normalize(glm::vec3(direction.x, 0, direction.z));
     if (keys[GLFW_KEY_W]) {
@@ -59,8 +62,10 @@ void updateCameraPosition() {
         camPos-=speed*right;
     }
     
-    
-    if (keys[GLFW_KEY_LEFT_SHIFT]) {
+    if (keys[GLFW_KEY_RIGHT_SHIFT]) {
+        speed = superSpeedBoost;
+    }
+    else if (keys[GLFW_KEY_LEFT_SHIFT]) {
         speed = speedBoost;
     } else {
         speed = speedSlow;

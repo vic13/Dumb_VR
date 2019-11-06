@@ -22,8 +22,8 @@ static bool keysPressed[1024]; // is a key pressed or not ?
 
 static float mouseDeltaX = 0;
 static float mouseDeltaY = 0;
-static float prevMouseX = 0;
-static float prevMouseY = 0;
+static float prevMouseX = -1;
+static float prevMouseY = -1;
 
 float deltaTime = 0.0f;
 int width;
@@ -144,9 +144,11 @@ static void mouse_button_callback(GLFWwindow* /*window*/, int button, int action
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    mouseDeltaX = xpos - prevMouseX;
+    if (prevMouseX != -1) {
+        mouseDeltaX = xpos - prevMouseX;
+        mouseDeltaY = ypos - prevMouseY;
+    }
     prevMouseX = xpos;
-    mouseDeltaY = ypos - prevMouseY;
     prevMouseY = ypos;
     if (xpos < 0 || xpos > width/2 || ypos < -20 || ypos > height/2) {
         glfwSetCursorPos(window, width/4, height/4);
