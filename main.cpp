@@ -33,13 +33,14 @@ glm::vec3 getLightPos(float timeValue);
 
 // light center + radius + period
 float lightX = 3.0;
-float lightY = 3.0;
+float lightY = 0.0;
 float lightZ = 1.0;
 float lightRadius = 3.0;
 float lightPeriod = 3.0;
 
 int main() {
     GLFWwindow* mWindow = init_gl();
+    float timeValue = glfwGetTime();
     
     // Shaders
     Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
@@ -54,8 +55,8 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model donut = Model("donut", true, 3, 0, 0, 5);
-    Model cube = Model("cube", true, 3, 0, 1, 0.2);
+    Model donut = Model("donut", true, 3, 0, 0, 5, 2);
+    Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
     lightShaderModels.push_back(donut);
     lightShaderModels.push_back(cube);
     
@@ -76,7 +77,11 @@ int main() {
         glm::mat4 v = getV();
         
         // Update light position
-        float timeValue = glfwGetTime();
+        if (pause) {
+            glfwSetTime(timeValue);
+        } else {
+            timeValue = glfwGetTime();
+        }
         glm::vec3 lightPos = getLightPos(timeValue);
         
         // Models without lighting
@@ -91,10 +96,12 @@ int main() {
         // Models with lighting
         lightShader.use();
         lightShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
+        lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         lightShader.setMatrix4("v", v);
         for (Model model : lightShaderModels) {
             lightShader.setMatrix4("mvp", p * v * model.m);
             lightShader.setMatrix4("m", model.m);
+            lightShader.setFloat("ns", model.ns);
             glBindTexture(GL_TEXTURE_2D, model.texture);
             model.Draw(lightShader);
         }

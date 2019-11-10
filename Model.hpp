@@ -33,12 +33,14 @@ class Model
 public:
     GLuint texture;
     glm::mat4 m;
+    float ns;
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
-    Model(const char* name, bool normal, float x, float y, float z, float scale)
+    Model(const char* name, bool normal, float x, float y, float z, float scale, float ns = 0)
     {
         this->normal = normal;
         this->m = getM(x, y, z, scale);
+        this->ns = ns;
         this->texture = createTexture(getTexPath(name));
         this->loadModel(getObjPath(name));
     }

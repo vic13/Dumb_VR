@@ -14,6 +14,8 @@ float superSpeedBoost = 0.5;
 float speed = speedSlow;
 float rotationSpeed = 0.01;
 
+bool pause = false;
+
 float g = 0.3;
 bool falling = false;
 float fallingT = 0;
@@ -49,6 +51,11 @@ void updateCameraPosition() {
         speed = speedBoost;
     } else {
         speed = speedSlow;
+    }
+    
+    if (keysPressed[GLFW_KEY_P]) {
+        keysPressed[GLFW_KEY_P] = false;
+        pause = !pause;
     }
     
     if (keysPressed[GLFW_KEY_F]) {

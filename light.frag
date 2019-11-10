@@ -6,26 +6,45 @@ out vec4 color;
 
 uniform float intensity;
 uniform sampler2D texSampler;
+uniform float ns;
 
-in vec3 normalFrag;
-in vec3 lightFrag;
+in vec3 n;
+in vec3 l;
+in vec3 v;
 
 void main() {
+    float ka = 0.3;
+    float kd = 0.4;
+    float ks = 0.3;
+    
     vec3 color0 = texture(texSampler, uv).xyz;
     
     /* Lighting */
     // Ambient
-    float ambient = 0.2;
+    float ambient = 1;
     
     // Diffuse
-    vec3 n = normalize(normalFrag);
-    vec3 l = normalize(lightFrag);
     float cosTheta = dot(n, l);
     float diffuse = clamp(cosTheta, 0, 1);
     
-    // Total
-    float total = clamp(ambient+diffuse, 0, 1);
+    // Specular
+//    vec3 h = normalize(l+v);
+//    float cosPsi = dot(h, v);
+//    float specular = pow(clamp(cosPsi, 0, 1),300);
+    vec3 r = normalize(2*dot(n,l)*n-l);
     
+    float cosPhi = 0;
+    if (dot(r, n)>0) {
+        cosPhi = dot(r, v);
+    }
+    float specular = pow(clamp(cosPhi, 0, 1), ns);
+    
+    // Total
+    float total = ka*ambient + kd*diffuse + ks*specular;
+//    total = specular;
+    
+//    float a = clamp(cosPsi, 0, 1);
+//    color = vec4(a, a, a, 1);
     color = vec4(color0*total, 1);
-//    color = vec4((n+1)/2,1); //debug : show normals
+//    color = vec4((h+1)/2,1); //debug : show normals
 }
