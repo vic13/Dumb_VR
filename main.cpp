@@ -20,66 +20,66 @@
 // Def
 using std::cout;
 using std::endl;
-#define VERTEX_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/triangle.vert"
-#define FRAGMENT_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/triangle.frag"
 #define VERTEX_PATH_TEX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/tex.vert"
 #define FRAGMENT_PATH_TEX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/tex.frag"
+#define VERTEX_PATH_SKYBOX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/skybox.vert"
+#define FRAGMENT_PATH_SKYBOX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/skybox.frag"
 
-glm::mat4 getMDonough();
-glm::mat4 getMSkybox();
-
-GLuint createTexture(char* path);
-
+glm::mat4 getV();
+glm::mat4 getP();
 
 int main() {
     GLFWwindow* mWindow = init_gl();
     
-    // Done once
-    Model* mightyDonut = new Model("/Users/victorgoossens/Desktop/donut.obj", true);
-    Model* frosting = new Model("/Users/victorgoossens/Documents/Blender/donut.obj", true);
-    Model* skybox = new Model("/Users/victorgoossens/Desktop/skybox.obj", false);
-    
+    // Shaders
     Shader texShader = Shader(VERTEX_PATH_TEX, FRAGMENT_PATH_TEX, NULL, NULL, NULL);
     texShader.compile();
-//    Shader noTexShader = Shader(VERTEX_PATH, FRAGMENT_PATH, NULL, NULL, NULL);
-//    noTexShader.compile();
+    Shader skyboxShader = Shader(VERTEX_PATH_SKYBOX, FRAGMENT_PATH_SKYBOX, NULL, NULL, NULL);
+    skyboxShader.compile();
     
-    GLuint someTex = createTexture("/Users/victorgoossens/Downloads/Screenshot 2019-11-04 at 01.16.18.png");
-    GLuint deliciousTex = createTexture("/Users/victorgoossens/Documents/Blender/donut_text.png");
-    GLuint skyboxTex = createTexture("/Users/victorgoossens/Desktop/skybox.png");
+    // Matrices
+    glm::mat4 p = getP();
+    
+    // Models
+    Model* donut = new Model("donut", true, 3, 0, 0, 5);
+    Model* cube = new Model("cube", true, 3, 0, 1, 0.2);
+    Model* skybox = new Model("skybox", false, 0, 0, 0, 1000);
+    
+    
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
 		//showFPS();
-        
-//        float timeValue = glfwGetTime();
-//        float scale = sin(timeValue);
-//        float intensity = (sin(timeValue) / 2.0f) + 0.5f;
-        
         clearScreen();
         
         // Update camera
         updateCameraPosition();
         updateCameraRotation();
         
+        glm::mat4 v = getV();
         
         
         texShader.use();
+        texShader.setVector3f("lightPosition", 3.0f, 3.0f, 3.0f);
+        texShader.setMatrix4("v", v);
         
-        glm::mat4 mvpDonough = getMVP(getMDonough());
-        texShader.setMatrix4("mvp", mvpDonough);
-        glBindTexture(GL_TEXTURE_2D, deliciousTex);
-        mightyDonut->Draw(texShader);
-//        glActiveTexture(GL_TEXTURE0);             What's is that for ?
-//        texShader.setInteger("texSampler", 0);
+        // Donut
+        texShader.setMatrix4("mvp", p * v * donut->m);
+        texShader.setMatrix4("m", donut->m);
+        glBindTexture(GL_TEXTURE_2D, donut->texture);
+        donut->Draw(texShader);
+
+        // Cube
+        texShader.setMatrix4("mvp", p * v * cube->m);
+        texShader.setMatrix4("m", cube->m);
+        glBindTexture(GL_TEXTURE_2D, cube->texture);
+        cube->Draw(texShader);
         
-        glBindTexture(GL_TEXTURE_2D, someTex);
-        frosting->Draw(texShader);
-        
-        glm::mat4 mvpSkybox = getMVP(getMSkybox());
-        texShader.setMatrix4("mvp", mvpSkybox);
-        glBindTexture(GL_TEXTURE_2D, skyboxTex);
-        skybox->Draw(texShader);
+        // Skybox
+        skyboxShader.use();
+        skyboxShader.setMatrix4("mvp", p * v * skybox->m);
+        glBindTexture(GL_TEXTURE_2D, skybox->texture);
+        skybox->Draw(skyboxShader);
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);
@@ -89,32 +89,21 @@ int main() {
     return EXIT_SUCCESS;
 }
 
-GLuint createTexture(char* path) {
-    int texWidth, texHeight, n;
-    unsigned char* data = stbi_load(path, &texWidth, &texHeight, &n, 0);
-    
-    cout << texWidth << endl;
 
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    //glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    stbi_image_free(data);
-
-    return texture;
+glm::mat4 getP() {
+    // Projection matrix : 45° Field of View, width:height ratio, display range : 0.1 unit <-> 4000 units
+    return glm::perspective(glm::radians(45.0f), (float) width / (float)height, 0.1f, 4000.0f);
+      
+    // Or, for an ortho camera :
+    //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
 }
 
-glm::mat4 getMDonough() {
-    return glm::scale(glm::mat4(1), glm::vec3(5,5,5));
+glm::mat4 getV() {
+    return glm::lookAt(
+    camPos,           // Position
+    camPos+direction, // and looks at
+    up  // Head is up (set to 0,-1,0 to look upside-down)
+    );
 }
-
-glm::mat4 getMSkybox() {
-    return glm::scale(glm::mat4(1), glm::vec3(1000,1000,1000));
-}
-
 

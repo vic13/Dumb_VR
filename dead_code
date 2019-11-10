@@ -2,6 +2,13 @@ GLuint createTriangleVAO();
 GLuint createTexTriangleVAO();
 GLuint createCubeVAO();
 
+//        glActiveTexture(GL_TEXTURE0);             What's is that for ?
+//        texShader.setInteger("texSampler", 0);
+
+//        float timeValue = glfwGetTime();
+//        float scale = sin(timeValue);
+//        float intensity = (sin(timeValue) / 2.0f) + 0.5f;
+
 /// MAIN ///
 //        // Triangle
 //        glm::mat4 mvpTriangle = getMVP(getMTriangle());

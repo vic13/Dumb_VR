@@ -1,10 +1,10 @@
 
 
 // camera init position
-glm::vec3 camPos = glm::vec3(0,0,-10);
+glm::vec3 camPos = glm::vec3(0,0,0);
 
 // camera init rotations
-float hAngle = 0;
+float hAngle = 3.14/2;
 float vAngle = 0;
 
 // camera speed and rotation speed
@@ -14,7 +14,7 @@ float superSpeedBoost = 0.5;
 float speed = speedSlow;
 float rotationSpeed = 0.01;
 
-float g = 0.981;
+float g = 0.3;
 bool falling = false;
 float fallingT = 0;
 
@@ -24,27 +24,7 @@ glm::vec3 up;
 
 void updateCameraPosition();
 void updateCameraRotation();
-glm::mat4 getMVP(glm::mat4 model);
 
-glm::mat4 getMVP(glm::mat4 model) {
-    // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float) width / (float)height, 0.1f, 4000.0f);
-      
-    // Or, for an ortho camera :
-    //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
-    
-    // Camera matrix
-    glm::mat4 view = glm::lookAt(
-        camPos,           // Position
-        camPos+direction, // and looks at
-        up  // Head is up (set to 0,-1,0 to look upside-down)
-        );
-    
-    
-    // Our ModelViewProjection : multiplication of our 3 matrices
-    glm::mat4 mvp = projection * view * model; // Remember, matrix multiplication is the other way around
-    return mvp;
-}
 
 
 void updateCameraPosition() {

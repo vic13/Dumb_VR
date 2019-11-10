@@ -17,17 +17,29 @@
 
 #include "Mesh.hpp"
 
+#define OBJ_PATH "/Users/victorgoossens/VR_Assets/Objs/"
+#define TEX_PATH "/Users/victorgoossens/VR_Assets/Textures/"
+
 GLint TextureFromFile(const char* path, std::string directory);
+
+const char* getTexPath(const char* texName);
+const char* getObjPath(const char* objName);
+GLuint createTexture(const char* path);
+glm::mat4 getM(float x, float y, float z, float scale);
 
 class Model 
 {
 public:
+    GLuint texture;
+    glm::mat4 m;
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
-    Model(GLchar* path, bool normal)
+    Model(const char* name, bool normal, float x, float y, float z, float scale)
     {
-        this->normal = false;
-        this->loadModel(path);
+        this->normal = normal;
+        this->m = getM(x, y, z, scale);
+        this->texture = createTexture(getTexPath(name));
+        this->loadModel(getObjPath(name));
     }
 
     // Draws the model, and thus all its meshes
@@ -38,13 +50,29 @@ public:
     }
     
 private:
-    bool normal = true;
+    bool normal;
     /*  Model Data  */
     std::vector<Mesh> meshes;
     std::string directory;
     std::vector<Texture> textures_loaded;	// Stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
 
     /*  Functions   */
+    glm::mat4 getM(float x, float y, float z, float scale) {
+        glm::mat4 scaling = glm::scale(glm::mat4(1), glm::vec3(scale,scale,scale));
+        glm::mat4 translation = glm::translate(glm::mat4(1), glm::vec3(x,y,z));
+        return translation*scaling;
+    }
+
+    const char* getTexPath(const char* texName) {
+        std::string str = std::string(TEX_PATH) + std::string(texName) + ".png";
+        return str.c_str();
+    }
+
+    const char* getObjPath(const char* objName) {
+        std::string str = std::string(OBJ_PATH) + std::string(objName) + ".obj";
+        return str.c_str();
+    }
+
     // Loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string path)
     {
@@ -187,6 +215,24 @@ private:
 };
 
 
+
+GLuint createTexture(const char* path) {
+    int texWidth, texHeight, n;
+    unsigned char* data = stbi_load(path, &texWidth, &texHeight, &n, 0);
+    
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    //glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    stbi_image_free(data);
+
+    return texture;
+}
 
 
 GLint TextureFromFile(const char* path, std::string directory)
