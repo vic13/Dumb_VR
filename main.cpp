@@ -36,7 +36,7 @@ int main() {
     // Light Pos
     float lightX = 3.0;
     float lightY = 3.0;
-    float lightZ = 3.0;
+    float lightZ = 0.0;
     
     // Shaders
     Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
