@@ -41,45 +41,39 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model* donut = new Model("donut", true, 3, 0, 0, 5);
-    Model* cube = new Model("cube", true, 3, 0, 1, 0.2);
-    Model* skybox = new Model("skybox", false, 0, 0, 0, 1000);
+    Model donut = Model("donut", true, 3, 0, 0, 5);
+    Model cube = Model("cube", true, 3, 0, 1, 0.2);
+    Model skybox = Model("skybox", false, 0, 0, 0, 1000);
     
-    
+    texShader.addModel(donut);
+    texShader.addModel(cube);
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
 		//showFPS();
         clearScreen();
         
-        // Update camera
+        // Update camera + v
         updateCameraPosition();
         updateCameraRotation();
-        
         glm::mat4 v = getV();
         
-        
+        // Shader 1
         texShader.use();
         texShader.setVector3f("lightPosition", 3.0f, 3.0f, 3.0f);
         texShader.setMatrix4("v", v);
-        
-        // Donut
-        texShader.setMatrix4("mvp", p * v * donut->m);
-        texShader.setMatrix4("m", donut->m);
-        glBindTexture(GL_TEXTURE_2D, donut->texture);
-        donut->Draw(texShader);
-
-        // Cube
-        texShader.setMatrix4("mvp", p * v * cube->m);
-        texShader.setMatrix4("m", cube->m);
-        glBindTexture(GL_TEXTURE_2D, cube->texture);
-        cube->Draw(texShader);
+        for (Model model : texShader.models) {
+            texShader.setMatrix4("mvp", p * v * model.m);
+            texShader.setMatrix4("m", model.m);
+            glBindTexture(GL_TEXTURE_2D, model.texture);
+            donut.Draw(texShader);
+        }
         
         // Skybox
         skyboxShader.use();
-        skyboxShader.setMatrix4("mvp", p * v * skybox->m);
-        glBindTexture(GL_TEXTURE_2D, skybox->texture);
-        skybox->Draw(skyboxShader);
+        skyboxShader.setMatrix4("mvp", p * v * skybox.m);
+        glBindTexture(GL_TEXTURE_2D, skybox.texture);
+        skybox.Draw(skyboxShader);
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);

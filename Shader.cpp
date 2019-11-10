@@ -18,6 +18,10 @@ Shader &Shader::use() {
 	return *this;
 }
 
+void Shader::addModel(Model m) {
+    models.push_back(m);
+}
+
 void Shader::compile() {
 
 	GLuint vertexShader = pathToShader(mVertexPath, GL_VERTEX_SHADER);
