@@ -26,6 +26,7 @@ const char* getTexPath(const char* texName);
 const char* getObjPath(const char* objName);
 GLuint createTexture(const char* path);
 glm::mat4 getM(float x, float y, float z, float scale);
+void updateM(float x, float y, float z, float scale);
 
 class Model 
 {
@@ -47,6 +48,10 @@ public:
     {
         for(GLuint i = 0; i < this->meshes.size(); i++)
             this->meshes[i].Draw(shader);
+    }
+    
+    void updateM(float x, float y, float z, float scale) {
+        this->m = getM(x, y, z, scale);
     }
     
 private:

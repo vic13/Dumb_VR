@@ -29,14 +29,17 @@ using std::list;
 
 glm::mat4 getV();
 glm::mat4 getP();
+glm::vec3 getLightPos(float timeValue);
+
+// light center + radius + period
+float lightX = 3.0;
+float lightY = 3.0;
+float lightZ = 1.0;
+float lightRadius = 3.0;
+float lightPeriod = 3.0;
 
 int main() {
     GLFWwindow* mWindow = init_gl();
-    
-    // Light Pos
-    float lightX = 3.0;
-    float lightY = 3.0;
-    float lightZ = 0.0;
     
     // Shaders
     Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
@@ -55,10 +58,12 @@ int main() {
     Model cube = Model("cube", true, 3, 0, 1, 0.2);
     lightShaderModels.push_back(donut);
     lightShaderModels.push_back(cube);
+    
+    Model light1 = Model("light1", false, 0, 0, 0, 1);
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
-    Model light1 = Model("light1", false, lightX, lightY, lightZ, 1);
-    noLightShaderModels.push_back(skybox);
     noLightShaderModels.push_back(light1);
+    noLightShaderModels.push_back(skybox);
+    
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -69,24 +74,29 @@ int main() {
         updateCameraPosition();
         updateCameraRotation();
         glm::mat4 v = getV();
+        
+        // Update light position
+        float timeValue = glfwGetTime();
+        glm::vec3 lightPos = getLightPos(timeValue);
+        
+        // Models without lighting
+        noLightShader.use();
+        noLightShaderModels.front().updateM(lightPos.x, lightPos.y, lightPos.z, 1.0);
+        for (Model model : noLightShaderModels) {
+            noLightShader.setMatrix4("mvp", p * v * model.m);
+            glBindTexture(GL_TEXTURE_2D, model.texture);
+            model.Draw(noLightShader);
+        }
 
         // Models with lighting
         lightShader.use();
-        lightShader.setVector3f("lightPosition", lightX, lightY, lightZ);
+        lightShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
         lightShader.setMatrix4("v", v);
         for (Model model : lightShaderModels) {
             lightShader.setMatrix4("mvp", p * v * model.m);
             lightShader.setMatrix4("m", model.m);
             glBindTexture(GL_TEXTURE_2D, model.texture);
             model.Draw(lightShader);
-        }
-        
-        // Models without lighting
-        noLightShader.use();
-        for (Model model : noLightShaderModels) {
-            noLightShader.setMatrix4("mvp", p * v * model.m);
-            glBindTexture(GL_TEXTURE_2D, model.texture);
-            model.Draw(noLightShader);
         }
 
         // Flip Buffers and Draw
@@ -115,3 +125,9 @@ glm::mat4 getV() {
     );
 }
 
+glm::vec3 getLightPos(float timeValue) {
+    float posX = lightX + lightRadius*sin(timeValue*2*3.14/lightPeriod);
+    float posY = lightY;
+    float posZ = lightZ + lightRadius*cos(timeValue*2*3.14/lightPeriod);
+    return glm::vec3(posX, posY, posZ);
+}
