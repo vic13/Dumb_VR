@@ -8,18 +8,10 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Model.hpp"
-#include <list>
-using std::list;
 
 // Simple shader class from http://www.learnopengl.com/ with a few tweaks
 class Shader {
 public:
-    // List of models
-    list<Model> models;
-    
-    void addModel(Model m);
-    
 	// State
 	GLuint ID;
 

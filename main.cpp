@@ -16,14 +16,16 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <list>
 
 // Def
 using std::cout;
 using std::endl;
-#define VERTEX_PATH_TEX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/tex.vert"
-#define FRAGMENT_PATH_TEX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/tex.frag"
-#define VERTEX_PATH_SKYBOX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/skybox.vert"
-#define FRAGMENT_PATH_SKYBOX "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/skybox.frag"
+using std::list;
+#define LIGHT_VERT_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/light.vert"
+#define LIGHT_FRAG_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/light.frag"
+#define NO_LIGHT_VERT_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/no_light.vert"
+#define NO_LIGHT_FRAG_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/no_light.frag"
 
 glm::mat4 getV();
 glm::mat4 getP();
@@ -31,11 +33,19 @@ glm::mat4 getP();
 int main() {
     GLFWwindow* mWindow = init_gl();
     
+    // Light Pos
+    float lightX = 3.0;
+    float lightY = 3.0;
+    float lightZ = 3.0;
+    
     // Shaders
-    Shader texShader = Shader(VERTEX_PATH_TEX, FRAGMENT_PATH_TEX, NULL, NULL, NULL);
-    texShader.compile();
-    Shader skyboxShader = Shader(VERTEX_PATH_SKYBOX, FRAGMENT_PATH_SKYBOX, NULL, NULL, NULL);
-    skyboxShader.compile();
+    Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
+    lightShader.compile();
+    list<Model> lightShaderModels;
+    
+    Shader noLightShader = Shader(NO_LIGHT_VERT_PATH, NO_LIGHT_FRAG_PATH, NULL, NULL, NULL);
+    noLightShader.compile();
+    list<Model> noLightShaderModels;
     
     // Matrices
     glm::mat4 p = getP();
@@ -43,10 +53,12 @@ int main() {
     // Models
     Model donut = Model("donut", true, 3, 0, 0, 5);
     Model cube = Model("cube", true, 3, 0, 1, 0.2);
+    lightShaderModels.push_back(donut);
+    lightShaderModels.push_back(cube);
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
-    
-    texShader.addModel(donut);
-    texShader.addModel(cube);
+    Model light1 = Model("light1", false, lightX, lightY, lightZ, 1);
+    noLightShaderModels.push_back(skybox);
+    noLightShaderModels.push_back(light1);
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -57,23 +69,25 @@ int main() {
         updateCameraPosition();
         updateCameraRotation();
         glm::mat4 v = getV();
-        
-        // Shader 1
-        texShader.use();
-        texShader.setVector3f("lightPosition", 3.0f, 3.0f, 3.0f);
-        texShader.setMatrix4("v", v);
-        for (Model model : texShader.models) {
-            texShader.setMatrix4("mvp", p * v * model.m);
-            texShader.setMatrix4("m", model.m);
+
+        // Models with lighting
+        lightShader.use();
+        lightShader.setVector3f("lightPosition", lightX, lightY, lightZ);
+        lightShader.setMatrix4("v", v);
+        for (Model model : lightShaderModels) {
+            lightShader.setMatrix4("mvp", p * v * model.m);
+            lightShader.setMatrix4("m", model.m);
             glBindTexture(GL_TEXTURE_2D, model.texture);
-            donut.Draw(texShader);
+            model.Draw(lightShader);
         }
         
-        // Skybox
-        skyboxShader.use();
-        skyboxShader.setMatrix4("mvp", p * v * skybox.m);
-        glBindTexture(GL_TEXTURE_2D, skybox.texture);
-        skybox.Draw(skyboxShader);
+        // Models without lighting
+        noLightShader.use();
+        for (Model model : noLightShaderModels) {
+            noLightShader.setMatrix4("mvp", p * v * model.m);
+            glBindTexture(GL_TEXTURE_2D, model.texture);
+            model.Draw(noLightShader);
+        }
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);
