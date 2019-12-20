@@ -17,6 +17,8 @@ void main() {
     float kd = 0.4;
     float ks = 0.3;
     
+    //vec3 lightColor = vec3(0.8,1,0.8); // Green light
+    
     vec3 color0 = texture(texSampler, uv).xyz;
     
     /* Lighting */
@@ -31,10 +33,11 @@ void main() {
 //    vec3 h = normalize(l+v);
 //    float cosPsi = dot(h, v);
 //    float specular = pow(clamp(cosPsi, 0, 1),300);
-    vec3 r = normalize(2*dot(n,l)*n-l);
+    
     
     float cosPhi = 0;
-    if (dot(r, n)>0) {
+    if (dot(l, n)>0) {   //if bounced on outside surface
+        vec3 r = normalize(2*dot(n,l)*n-l);
         cosPhi = dot(r, v);
     }
     float specular = pow(clamp(cosPhi, 0, 1), ns);

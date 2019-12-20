@@ -42,6 +42,11 @@ int main() {
     GLFWwindow* mWindow = init_gl();
     float timeValue = glfwGetTime();
     
+    //Enable blending (alpha)
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
+    
     // Shaders
     Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
     lightShader.compile();
@@ -57,8 +62,10 @@ int main() {
     // Models
     Model donut = Model("donut", true, 3, 0, 0, 5, 2);
     Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
+    Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
     lightShaderModels.push_back(donut);
     lightShaderModels.push_back(cube);
+    lightShaderModels.push_back(sphere);
     
     Model light1 = Model("light1", false, 0, 0, 0, 1);
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
