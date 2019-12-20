@@ -22,10 +22,10 @@
 using std::cout;
 using std::endl;
 using std::list;
-#define LIGHT_VERT_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/light.vert"
-#define LIGHT_FRAG_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/light.frag"
-#define NO_LIGHT_VERT_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/no_light.vert"
-#define NO_LIGHT_FRAG_PATH "/Users/victorgoossens/Desktop/Cours/Virtual Reality/Glitter/no_light.frag"
+#define LIGHT_VERT_PATH "light.vert"
+#define LIGHT_FRAG_PATH "light.frag"
+#define NO_LIGHT_VERT_PATH "no_light.vert"
+#define NO_LIGHT_FRAG_PATH "no_light.frag"
 
 glm::mat4 getV();
 glm::mat4 getP();
@@ -100,7 +100,9 @@ int main() {
             model.Draw(noLightShader);
         }
 
-        // Models with lighting
+		//std::cout << glm::to_string(v) << std::endl;
+
+        //// Models with lighting
         lightShader.use();
         lightShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);

@@ -17,14 +17,15 @@
 
 #include "Mesh.hpp"
 
-#define OBJ_PATH "/Users/victorgoossens/VR_Assets/Objs/"
-#define TEX_PATH "/Users/victorgoossens/VR_Assets/Textures/"
+#define OBJ_PATH "VR_Assets/Objs/"
+#define TEX_PATH "VR_Assets/Textures/"
 
 GLint TextureFromFile(const char* path, std::string directory);
 
-const char* getTexPath(const char* texName);
-const char* getObjPath(const char* objName);
-GLuint createTexture(const char* path);
+std::string getTexPath(const char* texName);
+std::string getObjPath(const char* objName);
+
+GLuint createTexture(std::string path);
 glm::mat4 getM(float x, float y, float z, float scale);
 void updateM(float x, float y, float z, float scale);
 
@@ -70,19 +71,22 @@ private:
         return translation*scaling;
     }
 
-    const char* getTexPath(const char* texName) {
+    std::string getTexPath(const char* texName) {
         std::string str = std::string(TEX_PATH) + std::string(texName) + ".png";
-        return str.c_str();
+		std::cout << str << std::endl;
+        return str;
     }
 
-    const char* getObjPath(const char* objName) {
+    std::string getObjPath(const char* objName) {
         std::string str = std::string(OBJ_PATH) + std::string(objName) + ".obj";
-        return str.c_str();
+		std::cout << str << std::endl;
+        return str;
     }
 
     // Loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string path)
     {
+		std::cout << path << std::endl;
         // Read file via ASSIMP
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -223,9 +227,10 @@ private:
 
 
 
-GLuint createTexture(const char* path) {
+GLuint createTexture(std::string path) {
     int texWidth, texHeight, n;
-    unsigned char* data = stbi_load(path, &texWidth, &texHeight, &n, 0);
+	std::cout << "texture" << path << std::endl;
+    unsigned char* data = stbi_load(path.c_str(), &texWidth, &texHeight, &n, 0);
     
     GLuint texture;
     glGenTextures(1, &texture);
@@ -244,6 +249,7 @@ GLuint createTexture(const char* path) {
 
 GLint TextureFromFile(const char* path, std::string directory)
 {
+	std::cout << "from_file" << path << std::endl;
      //Generate texture ID and load texture data 
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
