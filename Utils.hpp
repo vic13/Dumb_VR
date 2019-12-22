@@ -150,11 +150,23 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     }
     prevMouseX = xpos;
     prevMouseY = ypos;
-    if (xpos < 0 || xpos > width/2 || ypos < -20 || ypos > height/2) {
-        glfwSetCursorPos(window, width/4, height/4);
-        prevMouseX = width/4;
-        prevMouseY = height/4;
-    }
+
+
+	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+		if (xpos < 0 || xpos > width || ypos < -20 || ypos > height) {
+			glfwSetCursorPos(window, width / 2, height / 2);
+			prevMouseX = width / 2;
+			prevMouseY = height / 2;
+		}
+	#else
+		if (xpos < 0 || xpos > width / 2 || ypos < -20 || ypos > height / 2) {
+			glfwSetCursorPos(window, width / 2, height / 2);
+			prevMouseX = width / 4;
+			prevMouseY = height / 4;
+		}
+	#endif
+
+
     if (keys[GLFW_MOUSE_BUTTON_RIGHT]) {
         std::cout << "Mouse Position : (" << xpos << ", " << ypos << ")" << std::endl;
     }
