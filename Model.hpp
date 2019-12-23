@@ -35,6 +35,8 @@ public:
     GLuint texture;
     glm::mat4 m;
     float ns;
+	const char* name;
+
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
     Model(const char* name, bool normal, float x, float y, float z, float scale, float ns = 0)
@@ -42,9 +44,17 @@ public:
         this->normal = normal;
         this->m = getM(x, y, z, scale);
         this->ns = ns;
-        this->texture = createTexture(getTexPath(name));
+		this->name = name;
         this->loadModel(getObjPath(name));
     }
+
+	Model(const char* name, bool normal, float scale, float ns = 0)
+	{
+		this->normal = normal;
+		this->ns = ns;
+		this->name = name;
+		this->loadModel(getObjPath(name));
+	}
 
     // Draws the model, and thus all its meshes
     void Draw(Shader shader)
@@ -56,21 +66,22 @@ public:
     void updateM(float x, float y, float z, float scale) {
         this->m = getM(x, y, z, scale);
     }
-    
+
+	glm::mat4 getM(float x, float y, float z, float scale) {
+		glm::mat4 scaling = glm::scale(glm::mat4(1), glm::vec3(scale, scale, scale));
+		glm::mat4 translation = glm::translate(glm::mat4(1), glm::vec3(x, y, z));
+		return translation * scaling;
+	}
+
 private:
     bool normal;
     /*  Model Data  */
     std::vector<Mesh> meshes;
     std::string directory;
     std::vector<Texture> textures_loaded;	// Stores all the textures loaded so far, optimization to make sure textures aren't loaded more than once.
+	
 
     /*  Functions   */
-    glm::mat4 getM(float x, float y, float z, float scale) {
-        glm::mat4 scaling = glm::scale(glm::mat4(1), glm::vec3(scale,scale,scale));
-        glm::mat4 translation = glm::translate(glm::mat4(1), glm::vec3(x,y,z));
-        return translation*scaling;
-    }
-
     std::string getTexPath(const char* texName) {
         std::string str = std::string(TEX_PATH) + std::string(texName) + ".png";
 		std::cout << str << std::endl;
@@ -124,7 +135,10 @@ private:
 
     Mesh processMesh(aiMesh* mesh, const aiScene* scene)
     {
-        // Data to fill
+
+		std::cout << "here" << std::endl;
+        
+		// Data to fill
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
         std::vector<Texture> textures;
@@ -168,24 +182,35 @@ private:
             for(GLuint j = 0; j < face.mNumIndices; j++)
                 indices.push_back(face.mIndices[j]);
         }
-        // Process materials
-        if(mesh->mMaterialIndex >= 0)
-        {
-            aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-            // We assume a convention for sampler names in the shaders. Each diffuse texture should be named
-            // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
-            // Same applies to other texture as the following list summarizes:
-            // Diffuse: texture_diffuseN
-            // Specular: texture_specularN
-            // Normal: texture_normalN
 
-            // 1. Diffuse std::maps
-            std::vector<Texture> diffusemaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-            textures.insert(textures.end(), diffusemaps.begin(), diffusemaps.end());
-            // 2. Specular std::maps
-            std::vector<Texture> specularmaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-            textures.insert(textures.end(), specularmaps.begin(), specularmaps.end());
-        }
+		
+		// This loads the texture inside the model and stores it in the textures_loaded vector
+		Texture texture;
+		std::string texturePath = getTexPath(this->name);
+		texture.id = createTexture(texturePath);
+		texture.type = "texture_diffuse";
+		textures.push_back(texture);
+		this->textures_loaded.push_back(texture);  // This is not used atm. Could be used to avoid the same texture from being loaded more than one time
+	
+
+        // Process materials Only uncomment if we decide to use .mtb files
+
+        //if(mesh->mMaterialIndex >= 0)
+        //{
+        //    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        //    // We assume a convention for sampler names in the shaders. Each diffuse texture should be named
+        //    // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER. 
+        //    // Same applies to other texture as the following list summarizes:
+        //    // Diffuse: texture_diffuseN
+        //    // Specular: texture_specularN
+        //    // Normal: texture_normalN
+        //    // 1. Diffuse std::maps
+        //    std::vector<Texture> diffusemaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        //    textures.insert(textures.end(), diffusemaps.begin(), diffusemaps.end());
+        //    // 2. Specular std::maps
+        //    std::vector<Texture> specularmaps = this->loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+        //    textures.insert(textures.end(), specularmaps.begin(), specularmaps.end());
+        //}
         
         // Return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
@@ -229,7 +254,7 @@ private:
 
 GLuint createTexture(std::string path) {
     int texWidth, texHeight, n;
-	std::cout << "texture" << path << std::endl;
+
     unsigned char* data = stbi_load(path.c_str(), &texWidth, &texHeight, &n, 0);
     
     GLuint texture;

@@ -7,6 +7,7 @@ out vec4 color;
 uniform float intensity;
 uniform sampler2D texSampler;
 uniform float ns;
+uniform vec3 lightColor;
 
 in vec3 n;
 in vec3 l;
@@ -17,7 +18,7 @@ void main() {
     float kd = 0.4;
     float ks = 0.3;
     
-    vec3 lightColor = vec3(0.5f,0.1f,0.1f); 
+    //vec3 lightColor = vec3(0.5f,0.1f,0.1f); 
     
     vec3 color0 = texture(texSampler, uv).xyz;
     

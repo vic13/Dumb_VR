@@ -160,7 +160,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		}
 	#else
 		if (xpos < 0 || xpos > width / 2 || ypos < -20 || ypos > height / 2) {
-			glfwSetCursorPos(window, width / 2, height / 2);
+			glfwSetCursorPos(window, width / 4, height / 4);
 			prevMouseX = width / 4;
 			prevMouseY = height / 4;
 		}
