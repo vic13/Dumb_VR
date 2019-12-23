@@ -17,17 +17,19 @@ void main() {
     float kd = 0.4;
     float ks = 0.3;
     
-    //vec3 lightColor = vec3(0.8,1,0.8); // Green light
+    vec3 lightColor = vec3(0.5f,0.1f,0.1f); 
     
     vec3 color0 = texture(texSampler, uv).xyz;
     
     /* Lighting */
     // Ambient
-    float ambient = 1;
+    float ambient_strength = 1;
+	vec3 ambient = ambient_strength * lightColor;
     
     // Diffuse
     float cosTheta = dot(n, l);
-    float diffuse = clamp(cosTheta, 0, 1);
+    float diffuse_strength = clamp(cosTheta, 0, 1);
+	vec3 diffuse = diffuse_strength * lightColor;
     
     // Specular
 //    vec3 h = normalize(l+v);
@@ -40,14 +42,17 @@ void main() {
         vec3 r = normalize(2*dot(n,l)*n-l);
         cosPhi = dot(r, v);
     }
-    float specular = pow(clamp(cosPhi, 0, 1), ns);
+    float specular_strength = pow(clamp(cosPhi, 0, 1), ns);
+	vec3 specular = specular_strength * lightColor;
+
     
     // Total
-    float total = ka*ambient + kd*diffuse + ks*specular;
+    vec3 total = ka*ambient + kd*diffuse + ks*specular;
+
 //    total = specular;
     
 //    float a = clamp(cosPsi, 0, 1);
 //    color = vec4(a, a, a, 1);
-    color = vec4(color0*total, 1);
+    color = vec4(color0 * total, 1);
 //    color = vec4((h+1)/2,1); //debug : show normals
 }
