@@ -58,24 +58,36 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model donut = Model("donut", true, 3, 0, 0, 5, 2);
-    Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
-    Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
-    lightShaderModels.push_back(donut);
+    //Model donut = Model("donut", true, 3, 0, 0, 5, 2);
+    Model cube = Model("block", true, 3, 0, 1, 0.02, 5);
+    //Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
+    //lightShaderModels.push_back(donut);
     lightShaderModels.push_back(cube);
-    lightShaderModels.push_back(sphere);
+    //lightShaderModels.push_back(sphere);
     
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
     noLightShaderModels.push_back(skybox);
-    
+
     Model sun = Model("light1", false, 0, 0, 0, 1);
     Model moon = Model("light1", false, 0, 0, 0, 1);
+
+
+	std::vector<glm::mat4> block_positions;
+	
+	for (float i = 0.0f; i < 96.0f; i += 4.0f) {
+		for (float j = 0.0f; j < 96.0f; j += 4.0f) {
+			glm::mat4 position = cube.getM(j, 0, i, 2.0f);
+			block_positions.push_back(position);
+		}
+	}
+	
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
-		//showFPS();
+		showFPS();
         clearScreen();
-        
+
+       
         // Update camera + v
         updateCameraPosition();
         updateCameraRotation();
@@ -122,7 +134,7 @@ int main() {
         noLightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         for (Model model : noLightShaderModels) {
             noLightShader.setMatrix4("mvp", p * v * model.m);
-            glBindTexture(GL_TEXTURE_2D, model.texture);
+            //glBindTexture(GL_TEXTURE_2D, model.texture);
             model.Draw(noLightShader);
         }
         // Models with lighting
@@ -131,13 +143,19 @@ int main() {
         lightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         lightShader.setMatrix4("v", v);
+
         for (Model model : lightShaderModels) {
-            lightShader.setMatrix4("mvp", p * v * model.m);
-            lightShader.setMatrix4("m", model.m);
-            lightShader.setFloat("ns", model.ns);
-            glBindTexture(GL_TEXTURE_2D, model.texture);
-            model.Draw(lightShader);
+			for (float i = 0.0f; i < 24.0f; i += 1.0f) {
+				for (float j = 0.0f; j < 24.0f; j += 1.0f) {
+					lightShader.setMatrix4("mvp", p * v * block_positions[j + 24*i]);
+					lightShader.setMatrix4("m", block_positions[j + 24 * i]);
+					lightShader.setFloat("ns", model.ns);
+					model.Draw(lightShader);
+				}
+			}
         }
+
+		//glBindTexture(GL_TEXTURE_2D, model.texture);
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);
