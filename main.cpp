@@ -119,6 +119,7 @@ int main() {
         
         // Models without lighting
         noLightShader.use();
+        noLightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         for (Model model : noLightShaderModels) {
             noLightShader.setMatrix4("mvp", p * v * model.m);
             glBindTexture(GL_TEXTURE_2D, model.texture);
@@ -127,7 +128,7 @@ int main() {
         // Models with lighting
         lightShader.use();
         lightShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
-        //lightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
+        lightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         lightShader.setMatrix4("v", v);
         for (Model model : lightShaderModels) {

@@ -7,6 +7,7 @@ out vec4 color;
 uniform float intensity;
 uniform sampler2D texSampler;
 uniform float ns;
+uniform vec3 lightColor;
 
 in vec3 n;
 in vec3 l;
@@ -48,6 +49,8 @@ void main() {
     
 //    float a = clamp(cosPsi, 0, 1);
 //    color = vec4(a, a, a, 1);
-    color = vec4(color0*total, 1);
+    color0 *= total;
+    color = vec4(color0.x*lightColor.x, color0.y*lightColor.y, color0.z*lightColor.z, 1.0);
+    //color = vec4(color0*total, 1);
 //    color = vec4((h+1)/2,1); //debug : show normals
 }
