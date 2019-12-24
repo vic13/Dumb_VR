@@ -151,8 +151,8 @@ int main() {
                 lightShader.setMatrix4("mvp", p * v * block_positions[j + 3*24*i]);
                 lightShader.setMatrix4("m", block_positions[j + 3*24 * i]);
                 lightShader.setFloat("ns", model.ns);
-                //model.DrawMultiple();
-                model.Draw(lightShader);
+                model.DrawMultiple();
+                //model.Draw(lightShader);
             }
         }
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
