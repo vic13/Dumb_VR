@@ -25,7 +25,7 @@ void main() {
     /* Lighting */
     // Ambient
     float ambient_strength = 1;
-	vec3 ambient = ambient_strength * lightColor;
+	vec3 ambient = normalize(ambient_strength * lightColor);
     
     // Diffuse
     float cosTheta = dot(n, l);
@@ -54,7 +54,6 @@ void main() {
     
 //    float a = clamp(cosPsi, 0, 1);
 //    color = vec4(a, a, a, 1);
-    color = vec4(color0.x*lightColor.x, color0.y*lightColor.y, color0.z*lightColor.z, 1.0);
-    //color = vec4(color0 * total, 1);
+    color = vec4(color0 * total, 1);
 //    color = vec4((h+1)/2,1); //debug : show normals
 }

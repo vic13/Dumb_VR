@@ -58,12 +58,12 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    //Model donut = Model("donut", true, 3, 0, 0, 5, 2);
-    Model cube = Model("block", true, 3, 0, 1, 0.02, 5);
-    //Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
-    //lightShaderModels.push_back(donut);
+    Model donut = Model("donut", true, 3, 0, 0, 5, 2);
+    Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
+    Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
+    lightShaderModels.push_back(donut);
     lightShaderModels.push_back(cube);
-    //lightShaderModels.push_back(sphere);
+    lightShaderModels.push_back(sphere);
     
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
     noLightShaderModels.push_back(skybox);
@@ -71,12 +71,12 @@ int main() {
     Model sun = Model("light1", false, 0, 0, 0, 1);
     Model moon = Model("light1", false, 0, 0, 0, 1);
 
-
+    
+    Model block = Model("block", true, 3, 10, 1, 0.02, 5);
 	std::vector<glm::mat4> block_positions;
-	
 	for (float i = 0.0f; i < 96.0f; i += 4.0f) {
 		for (float j = 0.0f; j < 96.0f; j += 4.0f) {
-			glm::mat4 position = cube.getM(j, 0, i, 2.0f);
+			glm::mat4 position = cube.getM(j, -10, i, 2.0f);
 			block_positions.push_back(position);
 		}
 	}
@@ -114,7 +114,7 @@ int main() {
         sun.Draw(lightSourceShader);
         // Moon
         lightSourceShader.setMatrix4("mvp", p * v * moon.m);
-        lightSourceShader.setVector3f("lightColor", moonColor.x, moonColor.y, moonColor.z);
+        lightSourceShader.setVector3f("lightColor", 3*moonColor.x, 3*moonColor.y, 3*moonColor.z);
         moon.Draw(lightSourceShader);
         
         
@@ -143,16 +143,21 @@ int main() {
         lightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         lightShader.setMatrix4("v", v);
-
+        
+        Model model = block;
+        for (float i = 0.0f; i < 24.0f; i += 1.0f) {
+            for (float j = 0.0f; j < 24.0f; j += 1.0f) {
+                lightShader.setMatrix4("mvp", p * v * block_positions[j + 24*i]);
+                lightShader.setMatrix4("m", block_positions[j + 24 * i]);
+                lightShader.setFloat("ns", model.ns);
+                model.Draw(lightShader);
+            }
+        }
         for (Model model : lightShaderModels) {
-			for (float i = 0.0f; i < 24.0f; i += 1.0f) {
-				for (float j = 0.0f; j < 24.0f; j += 1.0f) {
-					lightShader.setMatrix4("mvp", p * v * block_positions[j + 24*i]);
-					lightShader.setMatrix4("m", block_positions[j + 24 * i]);
-					lightShader.setFloat("ns", model.ns);
-					model.Draw(lightShader);
-				}
-			}
+            lightShader.setMatrix4("mvp", p * v * model.m);
+            lightShader.setMatrix4("m", model.m);
+            lightShader.setFloat("ns", model.ns);
+            model.Draw(lightShader);
         }
 
 		//glBindTexture(GL_TEXTURE_2D, model.texture);
