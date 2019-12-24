@@ -22,10 +22,11 @@
 
 GLint TextureFromFile(const char* path, std::string directory);
 
-std::string getTexPath(const char* texName);
+std::string getDiffuseTexPath(const char* texName);
+std::string getNormalTexPath(const char* texName);
 std::string getObjPath(const char* objName);
 
-GLuint createTexture(std::string path);
+GLuint createTexture(std::string path, bool alpha);
 glm::mat4 getM(float x, float y, float z, float scale);
 void updatePosition(float x, float y, float z);
 void updateRotation(float rotationAngle, glm::vec3 rotationAxis);
@@ -46,9 +47,11 @@ public:
 
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
-    Model(const char* name, bool normal, float x, float y, float z, float scale, float ns = 0)
+    Model(const char* name, bool normal, float x, float y, float z, float scale, float ns = 0, bool tangent = false, bool alpha = true)
     {
         this->normal = normal;
+        this->tangent = tangent;
+        this->alpha = alpha;
         this->x = x;
         this->y = y;
         this->z = z;
@@ -64,6 +67,12 @@ public:
     {
         for(GLuint i = 0; i < this->meshes.size(); i++)
             this->meshes[i].Draw(shader);
+    }
+    
+    void DrawMultiple()
+    {
+        for(GLuint i = 0; i < this->meshes.size(); i++)
+            this->meshes[i].DrawMultiple();
     }
     
     void updatePosition(float x, float y, float z) {
@@ -83,6 +92,8 @@ public:
 
 private:
     bool normal;
+    bool tangent;
+    bool alpha;
     /*  Model Data  */
     std::vector<Mesh> meshes;
     std::string directory;
@@ -90,9 +101,15 @@ private:
 	
 
     /*  Functions   */
-    std::string getTexPath(const char* texName) {
+    std::string getDiffuseTexPath(const char* texName) {
         std::string str = std::string(TEX_PATH) + std::string(texName) + ".png";
 		std::cout << str << std::endl;
+        return str;
+    }
+    
+    std::string getNormalTexPath(const char* texName) {
+        std::string str = std::string(TEX_PATH) + std::string(texName) + "_normal.png";
+        std::cout << str << std::endl;
         return str;
     }
 
@@ -105,10 +122,9 @@ private:
     // Loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string path)
     {
-		std::cout << path << std::endl;
         // Read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+        const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
         // Check for errors
         if(!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -143,8 +159,6 @@ private:
 
     Mesh processMesh(aiMesh* mesh, const aiScene* scene)
     {
-
-		std::cout << "here" << std::endl;
         
 		// Data to fill
         std::vector<Vertex> vertices;
@@ -167,6 +181,13 @@ private:
                 vector.y = mesh->mNormals[i].y;
                 vector.z = mesh->mNormals[i].z;
                 vertex.Normal = vector;
+            }
+            // Tangents
+            if (this->tangent) {
+                vector.x = mesh->mTangents[i].x;
+                vector.y = mesh->mTangents[i].y;
+                vector.z = mesh->mTangents[i].z;
+                vertex.Tangent = vector;
             }
             // Texture Coordinates
             if(mesh->mTextureCoords[0]) // Does the mesh contain texture coordinates?
@@ -194,12 +215,20 @@ private:
 		
 		// This loads the texture inside the model and stores it in the textures_loaded vector
 		Texture texture;
-		std::string texturePath = getTexPath(this->name);
-		texture.id = createTexture(texturePath);
+		std::string texturePath = getDiffuseTexPath(this->name);
+		texture.id = createTexture(texturePath, this->alpha);
 		texture.type = "texture_diffuse";
 		textures.push_back(texture);
 		this->textures_loaded.push_back(texture);  // This is not used atm. Could be used to avoid the same texture from being loaded more than one time
 	
+        if (this->tangent) {
+            Texture textureNormal;
+            std::string textureNormalPath = getNormalTexPath(this->name);
+            textureNormal.id = createTexture(texturePath, this->alpha);
+            textureNormal.type = "texture_normal";
+            textures.push_back(textureNormal);
+            this->textures_loaded.push_back(textureNormal);
+        }
 
         // Process materials Only uncomment if we decide to use .mtb files
 
@@ -260,7 +289,7 @@ private:
 
 
 
-GLuint createTexture(std::string path) {
+GLuint createTexture(std::string path, bool alpha) {
     int texWidth, texHeight, n;
 
     unsigned char* data = stbi_load(path.c_str(), &texWidth, &texHeight, &n, 0);
@@ -270,7 +299,12 @@ GLuint createTexture(std::string path) {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    if (alpha) {
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    } else {
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    }
+    
     //glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
 

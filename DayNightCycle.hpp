@@ -19,7 +19,7 @@ public:
     constexpr static const float lightY = 0.0;
     constexpr static const float lightZ = 1.0;
     constexpr static const float lightRadius = 300.0;
-    constexpr static const float lightPeriod = 25.0;
+    constexpr static const float lightPeriod = 5.0;
     
     constexpr static const float transitionSmoothness = 0.25;
     constexpr static const float redSmoothness = 0.7;

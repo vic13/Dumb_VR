@@ -18,6 +18,7 @@ struct Vertex {
     glm::vec3 Position; // Position
     glm::vec3 Normal; // Normal
     glm::vec2 TexCoords; // TexCoords
+    glm::vec3 Tangent; //Tangent
 };
 
 struct Texture {
@@ -43,6 +44,10 @@ public:
 
         // Now that we have all the required data, set the vertex buffers and its attribute pointers.
         this->setupMesh();
+    }
+    
+    void DrawMultiple() {
+        glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
     }
 
     // Render the mesh
@@ -75,13 +80,13 @@ public:
         // Draw mesh
         glBindVertexArray(this->VAO);
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        //glBindVertexArray(0);
 
         // Always good practice to set everything back to defaults once configured.
         for (GLuint i = 0; i < this->textures.size(); i++)
         {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, 0);
+            //glActiveTexture(GL_TEXTURE0 + i);
+            //glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
 
@@ -119,6 +124,9 @@ private:
         // Vertex Texture Coords
         glEnableVertexAttribArray(2);	
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, TexCoords));
+        // Vertex Tangents
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Tangent));
 
         glBindVertexArray(0);
     }

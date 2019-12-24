@@ -27,6 +27,8 @@ using std::endl;
 #define LIGHT_FRAG_PATH "with_light.frag"
 #define SKYBOX_VERT_PATH "skybox.vert"
 #define SKYBOX_FRAG_PATH "skybox.frag"
+#define BUMP_VERT_PATH "bump_map.vert"
+#define BUMP_FRAG_PATH "bump_map.frag"
 
 glm::mat4 getVSkybox();
 glm::mat4 getV();
@@ -44,13 +46,16 @@ int main() {
     // Shaders
     Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
     lightShader.compile();
-    std::vector<Model> lightShaderModels;
+    std::vector<Model*> lightShaderModels;
     
     Shader skyboxShader = Shader(SKYBOX_VERT_PATH, SKYBOX_FRAG_PATH, NULL, NULL, NULL);
     skyboxShader.compile();
     
     Shader lightSourceShader = Shader(LIGHT_SOURCE_VERT_PATH, LIGHT_SOURCE_FRAG_PATH, NULL, NULL, NULL);
     lightSourceShader.compile();
+    
+    Shader bumpShader = Shader(BUMP_VERT_PATH, BUMP_FRAG_PATH, NULL, NULL, NULL);
+    bumpShader.compile();
     
     // Matrices
     glm::mat4 p = getP();
@@ -59,9 +64,12 @@ int main() {
     Model donut = Model("donut", true, 3, 0, 0, 5, 2);
     Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
     Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
-    lightShaderModels.push_back(donut);
-    lightShaderModels.push_back(cube);
-    lightShaderModels.push_back(sphere);
+    lightShaderModels.push_back(&donut);
+    lightShaderModels.push_back(&cube);
+    lightShaderModels.push_back(&sphere);
+    
+    Model bumpCube = Model("bump_cube", true, 3, 0, 2, 0.2, 5, true, false);
+    //lightShaderModels.push_back(&bumpCube);
     
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
 
@@ -71,8 +79,8 @@ int main() {
     
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
 	std::vector<glm::mat4> block_positions;
-	for (float i = 0.0f; i < 96.0f; i += 4.0f) {
-		for (float j = 0.0f; j < 96.0f; j += 4.0f) {
+	for (float i = 0.0f; i < 96.0f*3; i += 4.0f) {
+		for (float j = 0.0f; j < 96.0f*3; j += 4.0f) {
 			glm::mat4 position = cube.getM(j, -10, i, 2.0f);
 			block_positions.push_back(position);
 		}
@@ -132,21 +140,39 @@ int main() {
         lightShader.setMatrix4("v", v);
         
         Model model = block;
-        for (float i = 0.0f; i < 24.0f; i += 1.0f) {
-            for (float j = 0.0f; j < 24.0f; j += 1.0f) {
-                lightShader.setMatrix4("mvp", p * v * block_positions[j + 24*i]);
-                lightShader.setMatrix4("m", block_positions[j + 24 * i]);
+        lightShader.setMatrix4("mvp", p * v * block_positions[0]);
+        lightShader.setMatrix4("m", block_positions[0]);
+        lightShader.setFloat("ns", model.ns);
+        model.Draw(lightShader);
+        
+        
+        for (float i = 0.0f; i < 24.0f*3; i += 1.0f) {
+            for (float j = 0.0f; j < 24.0f*3; j += 1.0f) {
+                lightShader.setMatrix4("mvp", p * v * block_positions[j + 3*24*i]);
+                lightShader.setMatrix4("m", block_positions[j + 3*24 * i]);
                 lightShader.setFloat("ns", model.ns);
+                //model.DrawMultiple();
                 model.Draw(lightShader);
             }
         }
-        lightShaderModels[1].updateRotation(timeValue, glm::vec3(1, 0, 0));
-        for (Model model : lightShaderModels) {
+        cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
+        for (Model* modelPointer : lightShaderModels) {
+            Model model = *modelPointer;
             lightShader.setMatrix4("mvp", p * v * model.m);
             lightShader.setMatrix4("m", model.m);
             lightShader.setFloat("ns", model.ns);
             model.Draw(lightShader);
         }
+        
+        // Bump map
+        bumpShader.use();
+        bumpShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
+        bumpShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
+        bumpShader.setMatrix4("mvp", p * v * bumpCube.m);
+        bumpShader.setMatrix4("m", bumpCube.m);
+        bumpCube.Draw(bumpShader);
+        
+        
         
         // Skybox
         skyboxShader.use();
