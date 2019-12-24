@@ -17,12 +17,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-#include <list>
 
 // Def
 using std::cout;
 using std::endl;
-using std::list;
 #define LIGHT_SOURCE_VERT_PATH "light_source.vert"
 #define LIGHT_SOURCE_FRAG_PATH "light_source.frag"
 #define LIGHT_VERT_PATH "with_light.vert"
@@ -46,7 +44,7 @@ int main() {
     // Shaders
     Shader lightShader = Shader(LIGHT_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
     lightShader.compile();
-    list<Model> lightShaderModels;
+    std::vector<Model> lightShaderModels;
     
     Shader skyboxShader = Shader(SKYBOX_VERT_PATH, SKYBOX_FRAG_PATH, NULL, NULL, NULL);
     skyboxShader.compile();
@@ -67,8 +65,8 @@ int main() {
     
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
 
-    Model sun = Model("light1", false, 0, 0, 0, 1);
-    Model moon = Model("light1", false, 0, 0, 0, 1);
+    Model sun = Model("light1", false, 0, 0, 0, 100);
+    Model moon = Model("light1", false, 0, 0, 0, 100);
 
     
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
@@ -101,10 +99,10 @@ int main() {
         // Day / night cycle
         glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
         glm::vec3 sunColor = DayNightCycle::getSunColor(timeValue);
-        sun.updateM(sunPos.x, sunPos.y, sunPos.z, 100.0);
+        sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
         glm::vec3 moonPos = DayNightCycle::getMoonPos(timeValue);
         glm::vec3 moonColor = DayNightCycle::getMoonColor(timeValue);
-        moon.updateM(moonPos.x, moonPos.y, moonPos.z, 100.0);
+        moon.updatePosition(moonPos.x, moonPos.y, moonPos.z);
         
         lightSourceShader.use();
         // Sun
@@ -142,6 +140,7 @@ int main() {
                 model.Draw(lightShader);
             }
         }
+        lightShaderModels[1].updateRotation(timeValue, glm::vec3(1, 0, 0));
         for (Model model : lightShaderModels) {
             lightShader.setMatrix4("mvp", p * v * model.m);
             lightShader.setMatrix4("m", model.m);

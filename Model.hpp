@@ -27,7 +27,8 @@ std::string getObjPath(const char* objName);
 
 GLuint createTexture(std::string path);
 glm::mat4 getM(float x, float y, float z, float scale);
-void updateM(float x, float y, float z, float scale);
+void updatePosition(float x, float y, float z);
+void updateRotation(float rotationAngle, glm::vec3 rotationAxis);
 
 class Model 
 {
@@ -36,25 +37,27 @@ public:
     glm::mat4 m;
     float ns;
 	const char* name;
+    
+    float x;
+    float y;
+    float z;
+    float scale;
+    
 
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
     Model(const char* name, bool normal, float x, float y, float z, float scale, float ns = 0)
     {
         this->normal = normal;
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->scale = scale;
         this->m = getM(x, y, z, scale);
         this->ns = ns;
 		this->name = name;
         this->loadModel(getObjPath(name));
     }
-
-	Model(const char* name, bool normal, float scale, float ns = 0)
-	{
-		this->normal = normal;
-		this->ns = ns;
-		this->name = name;
-		this->loadModel(getObjPath(name));
-	}
 
     // Draws the model, and thus all its meshes
     void Draw(Shader shader)
@@ -63,8 +66,12 @@ public:
             this->meshes[i].Draw(shader);
     }
     
-    void updateM(float x, float y, float z, float scale, float rotationAngle=0, glm::vec3 rotationAxis = glm::vec3(1, 0, 0)) {
-        this->m = getM(x, y, z, scale, rotationAngle, rotationAxis);
+    void updatePosition(float x, float y, float z) {
+        this->m = getM(x, y, z, this->scale);
+    }
+    
+    void updateRotation(float rotationAngle, glm::vec3 rotationAxis) {
+        this->m = getM(this->x, this->y, this->z, this->scale, rotationAngle, rotationAxis);
     }
 
 	glm::mat4 getM(float x, float y, float z, float scale, float rotationAngle=0, glm::vec3 rotationAxis = glm::vec3(1, 0, 0)) {

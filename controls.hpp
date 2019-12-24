@@ -8,9 +8,9 @@ float hAngle = 3.14/2;
 float vAngle = 0;
 
 // camera speed and rotation speed
-float speedSlow = 0.01;
-float speedBoost = 0.05;
-float superSpeedBoost = 0.5;
+float speedSlow = 0.05;
+float speedBoost = 0.5;
+float superSpeedBoost = 5;
 float speed = speedSlow;
 float rotationSpeed = 0.01;
 

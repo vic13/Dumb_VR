@@ -20,7 +20,8 @@ void main() {
     // Vectors n, l, v for lighting
     vec3 position_worldCoord = (m*vec4(position,1)).xyz;
     l = normalize(lightPosition-position_worldCoord); // unit vector vertex -> light
-    n = normalize(normal);
+    vec3 normal_worldCoord = (m*vec4(normal,0)).xyz; // takes into account rotation of the model
+    n = normalize(normal_worldCoord);
     v = normalize(cameraPosition-position_worldCoord); //unit vector vertex -> camera
     
     
