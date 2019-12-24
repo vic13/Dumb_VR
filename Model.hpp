@@ -63,14 +63,15 @@ public:
             this->meshes[i].Draw(shader);
     }
     
-    void updateM(float x, float y, float z, float scale) {
-        this->m = getM(x, y, z, scale);
+    void updateM(float x, float y, float z, float scale, float rotationAngle=0, glm::vec3 rotationAxis = glm::vec3(1, 0, 0)) {
+        this->m = getM(x, y, z, scale, rotationAngle, rotationAxis);
     }
 
-	glm::mat4 getM(float x, float y, float z, float scale) {
+	glm::mat4 getM(float x, float y, float z, float scale, float rotationAngle=0, glm::vec3 rotationAxis = glm::vec3(1, 0, 0)) {
+        glm::mat4 rotation = glm::rotate(glm::mat4(1), rotationAngle, rotationAxis);
 		glm::mat4 scaling = glm::scale(glm::mat4(1), glm::vec3(scale, scale, scale));
 		glm::mat4 translation = glm::translate(glm::mat4(1), glm::vec3(x, y, z));
-		return translation * scaling;
+		return translation * rotation * scaling;
 	}
 
 private:

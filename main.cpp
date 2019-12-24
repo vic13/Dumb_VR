@@ -27,9 +27,10 @@ using std::list;
 #define LIGHT_SOURCE_FRAG_PATH "light_source.frag"
 #define LIGHT_VERT_PATH "with_light.vert"
 #define LIGHT_FRAG_PATH "with_light.frag"
-#define NO_LIGHT_VERT_PATH "no_light.vert"
-#define NO_LIGHT_FRAG_PATH "no_light.frag"
+#define SKYBOX_VERT_PATH "skybox.vert"
+#define SKYBOX_FRAG_PATH "skybox.frag"
 
+glm::mat4 getVSkybox();
 glm::mat4 getV();
 glm::mat4 getP();
 
@@ -47,9 +48,8 @@ int main() {
     lightShader.compile();
     list<Model> lightShaderModels;
     
-    Shader noLightShader = Shader(NO_LIGHT_VERT_PATH, NO_LIGHT_FRAG_PATH, NULL, NULL, NULL);
-    noLightShader.compile();
-    list<Model> noLightShaderModels;
+    Shader skyboxShader = Shader(SKYBOX_VERT_PATH, SKYBOX_FRAG_PATH, NULL, NULL, NULL);
+    skyboxShader.compile();
     
     Shader lightSourceShader = Shader(LIGHT_SOURCE_VERT_PATH, LIGHT_SOURCE_FRAG_PATH, NULL, NULL, NULL);
     lightSourceShader.compile();
@@ -66,7 +66,6 @@ int main() {
     lightShaderModels.push_back(sphere);
     
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
-    noLightShaderModels.push_back(skybox);
 
     Model sun = Model("light1", false, 0, 0, 0, 1);
     Model moon = Model("light1", false, 0, 0, 0, 1);
@@ -117,7 +116,6 @@ int main() {
         lightSourceShader.setVector3f("lightColor", 3*moonColor.x, 3*moonColor.y, 3*moonColor.z);
         moon.Draw(lightSourceShader);
         
-        
         glm::vec3 lightPos;
         glm::vec3 lightColor;
         if (sunPos.y > moonPos.y) {
@@ -128,15 +126,6 @@ int main() {
             lightColor = moonColor;
         }
         
-        
-        // Models without lighting
-        noLightShader.use();
-        noLightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
-        for (Model model : noLightShaderModels) {
-            noLightShader.setMatrix4("mvp", p * v * model.m);
-            //glBindTexture(GL_TEXTURE_2D, model.texture);
-            model.Draw(noLightShader);
-        }
         // Models with lighting
         lightShader.use();
         lightShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
@@ -159,8 +148,12 @@ int main() {
             lightShader.setFloat("ns", model.ns);
             model.Draw(lightShader);
         }
-
-		//glBindTexture(GL_TEXTURE_2D, model.texture);
+        
+        // Skybox
+        skyboxShader.use();
+        skyboxShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
+        skyboxShader.setMatrix4("mvp", p * getVSkybox() * skybox.m);
+        skybox.Draw(skyboxShader);
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);
@@ -184,6 +177,14 @@ glm::mat4 getV() {
     return glm::lookAt(
     camPos,           // Position
     camPos+direction, // and looks at
+    up  // Head is up (set to 0,-1,0 to look upside-down)
+    );
+}
+
+glm::mat4 getVSkybox() {
+    return glm::lookAt(
+    glm::vec3(0, 0, 0),           // Position
+    direction, // and looks at
     up  // Head is up (set to 0,-1,0 to look upside-down)
     );
 }
