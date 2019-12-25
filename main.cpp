@@ -34,6 +34,8 @@ glm::mat4 getVSkybox();
 glm::mat4 getV();
 glm::mat4 getP();
 
+bool dayNightCycle = true;
+
 int main() {
     GLFWwindow* mWindow = init_gl();
     float timeValue = glfwGetTime();
@@ -68,15 +70,14 @@ int main() {
     lightShaderModels.push_back(&cube);
     lightShaderModels.push_back(&sphere);
     
-    Model bumpCube = Model("bump_cube", true, 3, 0, 2, 0.2, 5, true, false);
-    //lightShaderModels.push_back(&bumpCube);
+    Model bumpCube = Model("bump_cube", true, 6, 0, 0, 0.5, 5, true, false);
     
     Model skybox = Model("skybox", false, 0, 0, 0, 1000);
 
     Model sun = Model("light1", false, 0, 0, 0, 100);
     Model moon = Model("light1", false, 0, 0, 0, 100);
 
-    
+    /*
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
 	std::vector<glm::mat4> block_positions;
 	for (float i = 0.0f; i < 96.0f*3; i += 4.0f) {
@@ -84,7 +85,7 @@ int main() {
 			glm::mat4 position = cube.getM(j, -10, i, 2.0f);
 			block_positions.push_back(position);
 		}
-	}
+	}*/
 	
     
     // Rendering Loop
@@ -104,33 +105,38 @@ int main() {
         } else {
             timeValue = glfwGetTime();
         }
+        
+        glm::vec3 lightPos = glm::vec3(0, 10, 0);
+        glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
         // Day / night cycle
-        glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
-        glm::vec3 sunColor = DayNightCycle::getSunColor(timeValue);
-        sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
-        glm::vec3 moonPos = DayNightCycle::getMoonPos(timeValue);
-        glm::vec3 moonColor = DayNightCycle::getMoonColor(timeValue);
-        moon.updatePosition(moonPos.x, moonPos.y, moonPos.z);
-        
-        lightSourceShader.use();
-        // Sun
-        lightSourceShader.setMatrix4("mvp", p * v * sun.m);
-        lightSourceShader.setVector3f("lightColor", sunColor.x, sunColor.y, sunColor.z);
-        sun.Draw(lightSourceShader);
-        // Moon
-        lightSourceShader.setMatrix4("mvp", p * v * moon.m);
-        lightSourceShader.setVector3f("lightColor", 3*moonColor.x, 3*moonColor.y, 3*moonColor.z);
-        moon.Draw(lightSourceShader);
-        
-        glm::vec3 lightPos;
-        glm::vec3 lightColor;
-        if (sunPos.y > moonPos.y) {
-            lightPos = sunPos;
-            lightColor = sunColor;
-        } else {
-            lightPos = moonPos;
-            lightColor = moonColor;
+        if (dayNightCycle) {
+            glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
+            glm::vec3 sunColor = DayNightCycle::getSunColor(timeValue);
+            sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
+            glm::vec3 moonPos = DayNightCycle::getMoonPos(timeValue);
+            glm::vec3 moonColor = DayNightCycle::getMoonColor(timeValue);
+            moon.updatePosition(moonPos.x, moonPos.y, moonPos.z);
+            
+            lightSourceShader.use();
+            // Sun
+            lightSourceShader.setMatrix4("mvp", p * v * sun.m);
+            lightSourceShader.setVector3f("lightColor", sunColor.x, sunColor.y, sunColor.z);
+            sun.Draw(lightSourceShader);
+            // Moon
+            lightSourceShader.setMatrix4("mvp", p * v * moon.m);
+            lightSourceShader.setVector3f("lightColor", 3*moonColor.x, 3*moonColor.y, 3*moonColor.z);
+            moon.Draw(lightSourceShader);
+            
+            
+            if (sunPos.y > moonPos.y) {
+                lightPos = sunPos;
+                lightColor = sunColor;
+            } else {
+                lightPos = moonPos;
+                lightColor = moonColor;
+            }
         }
+        
         
         // Models with lighting
         lightShader.use();
@@ -138,14 +144,12 @@ int main() {
         lightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         lightShader.setMatrix4("v", v);
-        
+        /*
         Model model = block;
         lightShader.setMatrix4("mvp", p * v * block_positions[0]);
         lightShader.setMatrix4("m", block_positions[0]);
         lightShader.setFloat("ns", model.ns);
         model.Draw(lightShader);
-        
-        
         for (float i = 0.0f; i < 24.0f*3; i += 1.0f) {
             for (float j = 0.0f; j < 24.0f*3; j += 1.0f) {
                 lightShader.setMatrix4("mvp", p * v * block_positions[j + 3*24*i]);
@@ -154,7 +158,7 @@ int main() {
                 model.DrawMultiple();
                 //model.Draw(lightShader);
             }
-        }
+        }*/
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         for (Model* modelPointer : lightShaderModels) {
             Model model = *modelPointer;
@@ -170,6 +174,8 @@ int main() {
         bumpShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         bumpShader.setMatrix4("mvp", p * v * bumpCube.m);
         bumpShader.setMatrix4("m", bumpCube.m);
+        bumpShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
+        bumpShader.setFloat("ns", bumpCube.ns);
         bumpCube.Draw(bumpShader);
         
         

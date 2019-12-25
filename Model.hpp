@@ -224,7 +224,7 @@ private:
         if (this->tangent) {
             Texture textureNormal;
             std::string textureNormalPath = getNormalTexPath(this->name);
-            textureNormal.id = createTexture(texturePath, this->alpha);
+            textureNormal.id = createTexture(textureNormalPath, this->alpha);
             textureNormal.type = "texture_normal";
             textures.push_back(textureNormal);
             this->textures_loaded.push_back(textureNormal);
