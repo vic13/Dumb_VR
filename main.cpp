@@ -76,7 +76,7 @@ int main() {
     Model sun = Model("light1", false, 0, 0, 0, 100);
     Model moon = Model("light1", false, 0, 0, 0, 100);
     
-    Model steve = Model("cube", true, 0, 0, 0, 0.1, 5);
+    Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
     /*
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
@@ -179,6 +179,7 @@ int main() {
         }
         
         steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
+        steve.updateRotation(hAngle-M_PI/2.0, glm::vec3(0, 1, 0));
         if (!firstPerson) {
             lightShader.setMatrix4("mvp", p * v * steve.m);
             lightShader.setMatrix4("m", steve.m);
