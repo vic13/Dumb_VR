@@ -169,6 +169,7 @@ int main() {
         }
         
         // Bump map
+        bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.use();
         bumpShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
         bumpShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);

@@ -188,6 +188,7 @@ private:
                 vector.y = mesh->mTangents[i].y;
                 vector.z = mesh->mTangents[i].z;
                 vertex.Tangent = vector;
+                vertex.Bitangent = glm::normalize(glm::cross(vertex.Normal, vertex.Tangent));
             }
             // Texture Coordinates
             if(mesh->mTextureCoords[0]) // Does the mesh contain texture coordinates?

@@ -19,6 +19,7 @@ struct Vertex {
     glm::vec3 Normal; // Normal
     glm::vec2 TexCoords; // TexCoords
     glm::vec3 Tangent; //Tangent
+    glm::vec3 Bitangent; //Bitangent (could be calculated in shaders, but better to calculate it only once)
 };
 
 struct Texture {
@@ -134,6 +135,9 @@ private:
         // Vertex Tangents
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Tangent));
+        // Vertex Biangents
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Bitangent));
 
         glBindVertexArray(0);
     }

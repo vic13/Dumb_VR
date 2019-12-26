@@ -4,9 +4,9 @@ layout(location=1) in vec3 normal;
 layout(location=2) in vec2 vertexUV;
 
 out vec2 uv;
-out vec3 n;
-out vec3 l;
-out vec3 v;
+out vec3 N;
+out vec3 L;
+out vec3 V;
 
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
@@ -17,20 +17,9 @@ void main() {
     gl_Position = mvp * vec4(position, 1);
     uv = vertexUV;
     
-    // Vectors n, l, v for lighting
     vec3 position_worldCoord = (m*vec4(position,1)).xyz;
-    l = normalize(lightPosition-position_worldCoord); // unit vector vertex -> light
+    L = normalize(lightPosition-position_worldCoord); // unit vector vertex -> light
     vec3 normal_worldCoord = (m*vec4(normal,0)).xyz; // takes into account rotation of the model
-    n = normalize(normal_worldCoord);
-    v = normalize(cameraPosition-position_worldCoord); //unit vector vertex -> camera
-    
-    
-//    vec3 vertexPosition_cameraspace = ( v * m * vec4(position,1)).xyz;      //vertex position to camera space
-//    vec3 EyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;    //vertex->eye direction
-//
-//    vec3 LightPosition_cameraspace = ( v * vec4(lightPosition,1)).xyz;      //light position to camera space
-//    LightDirection_cameraspace = LightPosition_cameraspace + EyeDirection_cameraspace; //vertex->light direction
-
-    
-//    Normal_cameraspace = ( v * m * vec4(normal,0)).xyz;
+    N = normalize(normal_worldCoord);
+    V = normalize(cameraPosition-position_worldCoord); //unit vector vertex -> camera
 }

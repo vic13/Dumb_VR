@@ -1,9 +1,7 @@
 #version 330 core
 
-in vec3 l;
-in vec3 v;
-in mat3 TBN;
-
+in vec3 L_tangent;
+in vec3 V_tangent;
 in vec2 uv;
 
 uniform sampler2D texture_diffuse1;
@@ -14,13 +12,8 @@ uniform vec3 lightColor;
 out vec4 color;
 
 void main() {
-    //vec3 colorTangent = (T+1.0f)/2.0f;
-    //color = vec4(colorTangent, 1.0);
-    //vec4 color0 = texture(texSampler, uv);
-    //color = texture(texture_diffuse1, uv);
     vec3 normal = texture(texture_normal1, uv).rgb;
     normal = normalize(normal * 2.0 - 1.0);
-    normal = normalize(TBN * normal);
     
     // Calc lighting with new normals
     float ka = 0.3;
@@ -32,24 +25,21 @@ void main() {
     /* Lighting */
     // Ambient
     float ambient_strength = 1;
-    vec3 ambient = normalize(ambient_strength * lightColor);
     
     // Diffuse
-    float cosTheta = dot(normal, l);
+    float cosTheta = dot(normal, L_tangent);
     float diffuse_strength = clamp(cosTheta, 0, 1);
-    vec3 diffuse = diffuse_strength * lightColor;
     
     // Specular
     float cosPhi = 0;
-    if (dot(l, normal)>0) {   //if bounced on outside surface
-        vec3 r = normalize(2*dot(normal,l)*normal-l);
-        cosPhi = dot(r, v);
+    if (dot(L_tangent, normal)>0) {   //if bounced on outside surface
+        vec3 R = normalize(2*dot(normal, L_tangent)*normal-L_tangent);
+        cosPhi = dot(R, V_tangent);
     }
     float specular_strength = pow(clamp(cosPhi, 0, 1), ns);
-    vec3 specular = specular_strength * lightColor;
 
     // Total
-    vec3 total = ka*ambient + kd*diffuse + ks*specular;
-    color = vec4(color0 * total, 1);
+    float total_strength = ka*ambient_strength + kd*diffuse_strength + ks*specular_strength;
+    color = vec4(total_strength * color0 * lightColor, 1);
     
 }

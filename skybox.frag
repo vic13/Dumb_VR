@@ -4,10 +4,15 @@ in vec2 uv;
 
 out vec4 color;
 
-uniform sampler2D texSampler;
+uniform sampler2D texture_diffuse1;
 uniform vec3 lightColor;
 
 void main() {
-    vec3 color0 = texture(texSampler, uv).xyz;
-    color = vec4(color0.x*lightColor.x, color0.y*lightColor.y, color0.z*lightColor.z, 1.0);
+    vec3 color0 = texture(texture_diffuse1, uv).xyz;
+    
+    // Only ambient
+    float ambient_strength = 1;
+    vec3 ambient = ambient_strength * lightColor;
+    
+    color = vec4(color0 * ambient, 1);
 }
