@@ -30,8 +30,7 @@ using std::endl;
 #define BUMP_VERT_PATH "bump_map.vert"
 #define BUMP_FRAG_PATH "bump_map.frag"
 
-glm::mat4 getVSkybox();
-glm::mat4 getV();
+glm::mat4 getV(bool skybox = false);
 glm::mat4 getP();
 
 bool dayNightCycle = true;
@@ -76,6 +75,8 @@ int main() {
 
     Model sun = Model("light1", false, 0, 0, 0, 100);
     Model moon = Model("light1", false, 0, 0, 0, 100);
+    
+    Model steve = Model("cube", true, 0, 0, 0, 0.1, 5);
 
     /*
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
@@ -95,9 +96,18 @@ int main() {
 
        
         // Update camera + v
-        updateCameraPosition();
+        updateFirstPerson();
+        updateStevePosition();
         updateCameraRotation();
+        
         glm::mat4 v = getV();
+        glm::vec3 camPos;
+        if (firstPerson) {
+            camPos = stevePos;
+        } else {
+            camPos = stevePos-direction;
+        }
+        
         
         // Update time
         if (pause) {
@@ -168,6 +178,15 @@ int main() {
             model.Draw(lightShader);
         }
         
+        steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
+        if (!firstPerson) {
+            lightShader.setMatrix4("mvp", p * v * steve.m);
+            lightShader.setMatrix4("m", steve.m);
+            lightShader.setFloat("ns", steve.ns);
+            steve.Draw(lightShader);
+        }
+        
+        
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.use();
@@ -179,12 +198,10 @@ int main() {
         bumpShader.setFloat("ns", bumpCube.ns);
         bumpCube.Draw(bumpShader);
         
-        
-        
         // Skybox
         skyboxShader.use();
         skyboxShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
-        skyboxShader.setMatrix4("mvp", p * getVSkybox() * skybox.m);
+        skyboxShader.setMatrix4("mvp", p * getV(true) * skybox.m);
         skybox.Draw(skyboxShader);
 
         // Flip Buffers and Draw
@@ -205,20 +222,22 @@ glm::mat4 getP() {
     //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
 }
 
-glm::mat4 getV() {
-    return glm::lookAt(
-    camPos,           // Position
-    camPos+direction, // and looks at
-    up  // Head is up (set to 0,-1,0 to look upside-down)
-    );
-}
-
-glm::mat4 getVSkybox() {
-    return glm::lookAt(
-    glm::vec3(0, 0, 0),           // Position
-    direction, // and looks at
-    up  // Head is up (set to 0,-1,0 to look upside-down)
-    );
+glm::mat4 getV(bool skybox) {
+    glm::vec3 newStevePos = stevePos;
+    if (skybox) {
+        newStevePos = glm::vec3(0,0,0);
+    }
+    glm::vec3 lookAt;
+    glm::vec3 camPos;
+    if (firstPerson) {
+        camPos = newStevePos;
+        lookAt = camPos+direction;
+    } else {
+        camPos = newStevePos-direction;
+        lookAt = newStevePos;
+    }
+    
+    return glm::lookAt(camPos, lookAt, up); // Head is up (set to 0,-1,0 to look upside-down)
 }
 
 

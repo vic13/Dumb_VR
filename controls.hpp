@@ -1,7 +1,9 @@
 
+// First person or third person
+bool firstPerson = true;
 
-// camera init position
-glm::vec3 camPos = glm::vec3(0,0,0);
+// character (Steve) init position
+glm::vec3 stevePos = glm::vec3(0,0,0);
 
 // camera init rotations
 float hAngle = 3.14/2;
@@ -24,24 +26,32 @@ glm::vec3 direction;
 glm::vec3 right;
 glm::vec3 up;
 
-void updateCameraPosition();
+void updateStevePosition();
 void updateCameraRotation();
+void updateFirstPerson();
+
+void updateFirstPerson() {
+    if (keysPressed[GLFW_KEY_F5]) {
+        keysPressed[GLFW_KEY_F5] = false;
+        firstPerson = !firstPerson;
+    }
+}
 
 
-
-void updateCameraPosition() {
+void updateStevePosition() {
     glm::vec3 planeDirection = glm::normalize(glm::vec3(direction.x, 0, direction.z));
+    
     if (keys[GLFW_KEY_W]) {
-        camPos+=speed*planeDirection;
+        stevePos+=speed*planeDirection;
     }
     if (keys[GLFW_KEY_S]) {
-        camPos-=speed*planeDirection;
+        stevePos-=speed*planeDirection;
     }
     if (keys[GLFW_KEY_D]) {
-        camPos+=speed*right;
+        stevePos+=speed*right;
     }
     if (keys[GLFW_KEY_A]) {
-        camPos-=speed*right;
+        stevePos-=speed*right;
     }
     
     if (keys[GLFW_KEY_RIGHT_SHIFT]) {
@@ -69,18 +79,16 @@ void updateCameraPosition() {
     }
     if (!falling) {
         if (keys[GLFW_KEY_SPACE]) {
-            camPos+=speed*glm::vec3(0,1,0);
+            stevePos+=speed*glm::vec3(0,1,0);
         }
         if (keys[GLFW_KEY_C]) {
-            camPos-=speed*glm::vec3(0,1,0);
+            stevePos-=speed*glm::vec3(0,1,0);
         }
     } else {
         float t = glfwGetTime()-fallingT;
         float v = g*t;
-        camPos -= v*glm::vec3(0,1,0);
+        stevePos -= v*glm::vec3(0,1,0);
     }
-    
-    
 }
 
 void updateCameraRotation() {
@@ -100,10 +108,6 @@ void updateCameraRotation() {
         sin(vAngle),
         cos(vAngle) * cos(hAngle)
     );
-    right = glm::vec3(
-        sin(hAngle - 3.14f/2.0f),
-        0,
-        cos(hAngle - 3.14f/2.0f)
-    );
+    right = glm::vec3(sin(hAngle - 3.14f/2.0f), 0, cos(hAngle - 3.14f/2.0f));
     up = glm::cross(right, direction);
 }
