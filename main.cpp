@@ -99,6 +99,7 @@ int main() {
         updateFirstPerson();
         updateStevePosition();
         updateCameraRotation();
+        updateFlashLight();
         
         glm::mat4 v = getV();
         glm::vec3 camPos;
@@ -150,10 +151,17 @@ int main() {
         
         // Models with lighting
         lightShader.use();
-        lightShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
-        lightShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
+        lightShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
+        lightShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         lightShader.setMatrix4("v", v);
+        
+        
+        lightShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
+        lightShader.setVector3f("flashlight.color", 1.0f, 0.0f, 1.0f); // purple
+        lightShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
+        lightShader.setFloat("flashlight.angle", cos(M_PI/9.0)); // 20°
+        lightShader.setInteger("flashlight.on", flashlightOn);
         /*
         Model model = block;
         lightShader.setMatrix4("mvp", p * v * block_positions[0]);

@@ -1,6 +1,8 @@
 
 // First person or third person
 bool firstPerson = true;
+// Flashlight on / off
+bool flashlightOn = false;
 
 // character (Steve) init position
 glm::vec3 stevePos = glm::vec3(0,0,0);
@@ -26,9 +28,6 @@ glm::vec3 direction;
 glm::vec3 right;
 glm::vec3 up;
 
-void updateStevePosition();
-void updateCameraRotation();
-void updateFirstPerson();
 
 void updateFirstPerson() {
     if (keysPressed[GLFW_KEY_F5]) {
@@ -37,6 +36,13 @@ void updateFirstPerson() {
     }
 }
 
+void updateFlashLight() {
+    if (keysPressed[GLFW_KEY_L]) {
+        keysPressed[GLFW_KEY_L] = false;
+        flashlightOn = !flashlightOn;
+        std::cout << "ok" << std::endl;
+    }
+}
 
 void updateStevePosition() {
     glm::vec3 planeDirection = glm::normalize(glm::vec3(direction.x, 0, direction.z));

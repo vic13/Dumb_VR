@@ -6,20 +6,53 @@ out vec4 color;
 
 uniform sampler2D texture_diffuse1;
 uniform float ns;
-uniform vec3 lightColor;
+uniform vec3 pointlightColor;
 
+struct Flashlight {
+    vec3 color;
+    vec3 direction;
+    float angle;
+    bool on;
+};
+uniform Flashlight flashlight;
+
+in vec3 L_pointlight;
+in vec3 L_flashlight;
 in vec3 N;
-in vec3 L;
 in vec3 V;
 
+vec3 getLightColor(vec3 L, vec3 lightColor);
+vec3 getFlashlightColor();
+
 void main() {
+    vec3 color0 = texture(texture_diffuse1, uv).xyz;
+    
+    /* Lighting */
+    vec3 lightColor = vec3(0.0);
+    // Point light
+    lightColor += getLightColor(L_pointlight, pointlightColor);
+    // Flashlight
+    if (flashlight.on) {
+        lightColor += getFlashlightColor();
+    }
+    
+    color = vec4(color0 * lightColor, 1);
+}
+
+
+vec3 getFlashlightColor() {
+    if (dot(-flashlight.direction, L_flashlight) > flashlight.angle) {
+        return getLightColor(L_flashlight, flashlight.color);
+    } else {
+        return vec3(0.0);
+    }
+}
+
+vec3 getLightColor(vec3 L, vec3 lightColor) {
     float ka = 0.3;
     float kd = 0.4;
     float ks = 0.3;
     
-    vec3 color0 = texture(texture_diffuse1, uv).xyz;
-    
-    /* Lighting */
     // Ambient
     float ambient_strength = 1;
     
@@ -37,5 +70,7 @@ void main() {
 
     // Total
     float total_strength = ka*ambient_strength + kd*diffuse_strength + ks*specular_strength;
-    color = vec4(total_strength * color0 * lightColor, 1);
+    
+    return total_strength * lightColor;
+    
 }
