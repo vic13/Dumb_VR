@@ -88,6 +88,7 @@ int main() {
 		}
 	}*/
 	
+    GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -158,10 +159,15 @@ int main() {
         
         
         lightShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
-        lightShader.setVector3f("flashlight.color", 1.0f, 0.0f, 1.0f); // purple
+        lightShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f); // purple
         lightShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
-        lightShader.setFloat("flashlight.angle", cos(M_PI/9.0)); // 20°
+        lightShader.setFloat("flashlight.cosAngle", cos(M_PI/9.0)); // 20°
         lightShader.setInteger("flashlight.on", flashlightOn);
+        lightShader.setVector3f("right", right.x, right.y, right.z);
+        int i = 10;
+        glActiveTexture(GL_TEXTURE0 + i);
+        glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), i);
+        glBindTexture(GL_TEXTURE_2D, flashlight_tex);
         /*
         Model model = block;
         lightShader.setMatrix4("mvp", p * v * block_positions[0]);

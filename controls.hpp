@@ -40,7 +40,6 @@ void updateFlashLight() {
     if (keysPressed[GLFW_KEY_L]) {
         keysPressed[GLFW_KEY_L] = false;
         flashlightOn = !flashlightOn;
-        std::cout << "ok" << std::endl;
     }
 }
 

@@ -5,16 +5,19 @@ in vec2 uv;
 out vec4 color;
 
 uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_flashlight;
 uniform float ns;
 uniform vec3 pointlightColor;
 
 struct Flashlight {
     vec3 color;
     vec3 direction;
-    float angle;
+    float cosAngle;
     bool on;
 };
 uniform Flashlight flashlight;
+
+uniform vec3 right;
 
 in vec3 L_pointlight;
 in vec3 L_flashlight;
@@ -23,6 +26,7 @@ in vec3 V;
 
 vec3 getLightColor(vec3 L, vec3 lightColor);
 vec3 getFlashlightColor();
+vec2 getFlashlightUV(float r, float phi);
 
 void main() {
     vec3 color0 = texture(texture_diffuse1, uv).xyz;
@@ -41,11 +45,32 @@ void main() {
 
 
 vec3 getFlashlightColor() {
-    if (dot(-flashlight.direction, L_flashlight) > flashlight.angle) {
-        return getLightColor(L_flashlight, flashlight.color);
+    float cosTheta = dot(-flashlight.direction, L_flashlight);
+    
+    if (cosTheta > flashlight.cosAngle) {
+        float theta = acos(cosTheta);
+        float maxAngle = acos(flashlight.cosAngle);
+        float r = 0.5*theta/maxAngle;
+        
+        vec3 L_proj = L_flashlight - dot(L_flashlight, flashlight.direction)*flashlight.direction;
+        L_proj *= -1;
+        float cosPhi = dot(normalize(right), normalize(L_proj));
+        float phi = acos(cosPhi);
+        if (-L_flashlight.y > flashlight.direction.y) {
+            phi *= -1;
+        }
+        vec2 flashlight_uv = getFlashlightUV(r, phi);
+        vec3 colorFlashlightTex = texture(texture_flashlight, flashlight_uv).xyz;
+        return getLightColor(L_flashlight, flashlight.color*colorFlashlightTex);
     } else {
         return vec3(0.0);
     }
+}
+
+vec2 getFlashlightUV(float r, float phi) {
+    float u = 0.5+r*cos(phi);
+    float v = 0.5+r*sin(phi);
+    return vec2(u,v);
 }
 
 vec3 getLightColor(vec3 L, vec3 lightColor) {

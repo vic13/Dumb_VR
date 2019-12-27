@@ -20,7 +20,7 @@
 #define OBJ_PATH "VR_Assets/Objs/"
 #define TEX_PATH "VR_Assets/Textures/"
 
-GLint TextureFromFile(const char* path, std::string directory);
+//GLint TextureFromFile(const char* path, std::string directory);
 
 std::string getDiffuseTexPath(const char* texName);
 std::string getNormalTexPath(const char* texName);
@@ -259,6 +259,7 @@ private:
 
     // Checks all material textures of a given type and loads the textures if they're not loaded yet.
     // The required info is returned as a Texture struct.
+    /*
     std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
     {
         std::vector<Texture> textures;
@@ -288,7 +289,7 @@ private:
             }
         }
         return textures;
-    }
+    }*/
 };
 
 
@@ -317,7 +318,7 @@ GLuint createTexture(std::string path, bool alpha) {
     return texture;
 }
 
-
+/*
 GLint TextureFromFile(const char* path, std::string directory)
 {
 	std::cout << "from_file" << path << std::endl;
@@ -341,4 +342,4 @@ GLint TextureFromFile(const char* path, std::string directory)
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(image);
     return textureID;
-}
+}*/
