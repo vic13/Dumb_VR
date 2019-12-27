@@ -41,7 +41,7 @@ private:
 		return vertex;
 	}
 
-	void Chunk::update() {
+	void update() {
 		changed = false;
 
 		// Each block has 36 vertices hence the 6*6
@@ -279,7 +279,7 @@ private:
 		setupChunk();
 	}
 
-	void Chunk::setupChunk() {
+	void setupChunk() {
 		// Create buffers/arrays
 		glGenVertexArrays(1, &this->VAO);
 		glBindVertexArray(this->VAO);
@@ -354,16 +354,16 @@ public:
 		glDeleteBuffers(1, &vbo);
 	}
 
-	unsigned char Chunk::getBlock(int x, int y, int z) {
+	unsigned char getBlock(int x, int y, int z) {
 		return block[x][y][z];
 	}
 
-	void Chunk::setBlock(int x, int y, int z, unsigned char blockType) {
+	void setBlock(int x, int y, int z, unsigned char blockType) {
 		block[x][y][z] = blockType;
 		changed = true;
 	}
 
-	void Chunk::render(Shader shader) {
+	void render(Shader shader) {
 		if (changed) {
 			update();
 		}

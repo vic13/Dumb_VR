@@ -43,7 +43,7 @@ void main(void) {
 		uv = vec2( 0.0625*(texcoord.w) + 0.0625*number, - texcoord.y); 
 	}
 
-	vec3 color0 = texture2D(texSampler, uv).xyz;
+	vec3 color0 = texture(texSampler, uv).xyz;
 
 	/* Lighting */
     vec3 lightColor = vec3(0.0);

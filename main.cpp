@@ -85,17 +85,8 @@ int main() {
     Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
 
-	Chunk first_chunk = Chunk();
-	glm::mat4 chunkModel = cube.getM(6, 2, 10, 1.0f);
-
-	Chunk second_chunk = Chunk();
-	glm::mat4 chunkModel2 = cube.getM(6, 2, 26, 1.0f);
-
-	Chunk third_chunk = Chunk();
-	glm::mat4 chunkModel3 = cube.getM(6, 2, 42, 1.0f);
-
-	Chunk forth_chunk = Chunk();
-	glm::mat4 chunkModel4 = cube.getM(6, 2, 58, 1.0f);
+	Chunk chunk = Chunk();
+    int chunkSide = 10;
 
 
     /*
@@ -241,28 +232,26 @@ int main() {
 
 		//Chunk
 		chunkShader.use();
-
-		for (int j = 16; j < 15 * 16; j += 16) {
-			for (int t = 0; t < 15 * 16; t += 16) {
-				chunkShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
-				chunkShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
-				chunkShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-				chunkShader.setMatrix4("v", v);
-				chunkShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
-				chunkShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f); // purple
-				chunkShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
-				chunkShader.setFloat("flashlight.cosAngle", cos(M_PI / 9.0)); // 20°
-				chunkShader.setInteger("flashlight.on", flashlightOn);
-				chunkShader.setVector3f("right", right.x, right.y, right.z);
+        chunkShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
+        chunkShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
+        chunkShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
+        chunkShader.setMatrix4("v", v);
+        chunkShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
+        chunkShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f); // purple
+        chunkShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
+        chunkShader.setFloat("flashlight.cosAngle", cos(M_PI / 9.0)); // 20°
+        chunkShader.setInteger("flashlight.on", flashlightOn);
+        chunkShader.setVector3f("right", right.x, right.y, right.z);
+        chunkShader.setFloat("ns", bumpCube.ns);
+        glActiveTexture(GL_TEXTURE0 + i);
+        glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), i);
+        glBindTexture(GL_TEXTURE_2D, flashlight_tex);
+        
+		for (int j = 16; j < chunkSide * 16; j += 16) {
+			for (int t = 0; t < chunkSide * 16; t += 16) {
 				chunkShader.setMatrix4("m", cube.getM(6 + t, 2, j, 1.0f));
 				chunkShader.setMatrix4("mvp", p* v* cube.getM(6+t, 2, j, 1.0f));
-				chunkShader.setFloat("ns", bumpCube.ns);
-
-				glActiveTexture(GL_TEXTURE0 + i);
-				glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), i);
-				glBindTexture(GL_TEXTURE_2D, flashlight_tex);
-				first_chunk.render(chunkShader);
-
+				chunk.render(chunkShader);
 			}
 		}
 
