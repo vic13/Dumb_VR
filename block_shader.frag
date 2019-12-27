@@ -2,7 +2,7 @@
 
 
 in vec4 texcoord;
-uniform sampler2D texSampler;
+uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_flashlight;
 uniform float ns;
 uniform vec3 pointlightColor;
@@ -43,7 +43,7 @@ void main(void) {
 		uv = vec2( 0.0625*(texcoord.w) + 0.0625*number, - texcoord.y); 
 	}
 
-	vec3 color0 = texture(texSampler, uv).xyz;
+	vec3 color0 = texture(texture_diffuse1, uv).xyz;
 
 	/* Lighting */
     vec3 lightColor = vec3(0.0);

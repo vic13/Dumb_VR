@@ -320,7 +320,7 @@ public:
 
 		elements = 0;
 		changed = true;
-        this->texture = createTexture("chunk.png", false);
+        this->texture = createTexture("chunk.png", true);
 		//glGenBuffers(1, &VBO);
 	}
 
