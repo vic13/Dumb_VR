@@ -25,6 +25,11 @@ in vec3 L_flashlight;
 in vec3 N;
 in vec3 V;
 
+vec3 L_pointlight_norm = normalize(L_pointlight);
+vec3 L_flashlight_norm = normalize(L_flashlight);
+vec3 N_norm = normalize(N);
+vec3 V_norm = normalize(V);
+
 vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance);
 vec3 getFlashlightColor();
 vec2 getFlashlightUV(float r, float phi);
@@ -35,7 +40,7 @@ void main() {
     /* Lighting */
     vec3 lightColor = vec3(0.0);
     // Point light
-    lightColor += getLightColor(L_pointlight, pointlightColor, 0.0);
+    lightColor += getLightColor(L_pointlight_norm, pointlightColor, 0.0);
     // Flashlight
     if (flashlight.on) {
         lightColor += getFlashlightColor();
@@ -46,7 +51,7 @@ void main() {
 
 
 vec3 getFlashlightColor() {
-    float cosTheta = dot(normalize(-flashlight.direction), normalize(L_flashlight));
+    float cosTheta = dot(normalize(-flashlight.direction), L_flashlight_norm);
     
     if (cosTheta > flashlight.cosAngle) {
         float theta = acos(cosTheta);
@@ -57,12 +62,12 @@ vec3 getFlashlightColor() {
         L_proj *= -1;
         float cosPhi = dot(normalize(right), normalize(L_proj));
         float phi = acos(cosPhi);
-        if (-L_flashlight.y > flashlight.direction.y) {
-            phi *= -1;
-        }
+//        if (-L_flashlight_norm.y > flashlight.direction.y) {
+//            phi *= -1;
+//        }
         vec2 flashlight_uv = getFlashlightUV(r, phi);
         vec3 colorFlashlightTex = texture(texture_flashlight, flashlight_uv).xyz;
-        return getLightColor(L_flashlight, flashlight.color*colorFlashlightTex, length(L_flashlight));
+        return getLightColor(L_flashlight_norm, flashlight.color*colorFlashlightTex, length(L_flashlight));
         return flashlight.color;
     } else {
         return vec3(0.0);
@@ -75,7 +80,7 @@ vec2 getFlashlightUV(float r, float phi) {
     return vec2(u,v);
 }
 
-vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance) {
+vec3 getLightColor(vec3 L_norm, vec3 lightColor, float lightDistance) {
     float ka = 0.3;
     float kd = 0.4;
     float ks = 0.3;
@@ -84,14 +89,14 @@ vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance) {
     float ambient_strength = 1;
     
     // Diffuse
-    float cosTheta = dot(normalize(N), normalize(L));
+    float cosTheta = dot(N_norm, L_norm);
     float diffuse_strength = clamp(cosTheta, 0, 1);
     
     // Specular
     float cosPhi = 0;
     if (cosTheta>0) {   //if bounced on outside surface
-        vec3 R = 2*cosTheta*normalize(N) - normalize(L);
-        cosPhi = dot(normalize(R), normalize(V));
+        vec3 R = 2*cosTheta*N_norm - L_norm;
+        cosPhi = dot(normalize(R), V_norm);
     }
     float specular_strength = pow(clamp(cosPhi, 0, 1), ns);
 

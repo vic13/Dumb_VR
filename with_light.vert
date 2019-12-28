@@ -21,11 +21,12 @@ void main() {
     uv = vertexUV;
     
     vec3 position_worldCoord = (m*vec4(position,1)).xyz;
-    L_pointlight = pointlightPosition-position_worldCoord;   // vector vertex -> point light
-    L_flashlight = flashlightPosition-position_worldCoord;  // if normalized : bad results with interpolation
-    vec3 normal_worldCoord = (m*vec4(normal,0)).xyz; // takes into account rotation of the model
-    N = normal_worldCoord;
-    V = cameraPosition-position_worldCoord; //unit vector vertex -> camera
+    
+    // The following vectors are normalized in the fragment shader (useless to normalize before interpolation)
+    L_pointlight = pointlightPosition-position_worldCoord;  // vector vertex -> point light
+    L_flashlight = flashlightPosition-position_worldCoord;  // vector vertex -> flashlight
+    N = (m*vec4(normal,0)).xyz;;                            // takes into account rotation of the model
+    V = cameraPosition-position_worldCoord;                 // vector vertex -> camera
     
     
 }
