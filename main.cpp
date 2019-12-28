@@ -85,8 +85,13 @@ int main() {
     Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
 
-	Chunk chunk = Chunk();
-    int chunkSide = 10;
+	std::vector<Chunk> chunks;
+	int chunkSide = 30;
+	for (int j = 16; j < chunkSide * 16; j += 16) {
+		for (int t = 0; t < chunkSide * 16; t += 16) {
+			chunks.push_back(Chunk(6+t, 2, j, 1.0f));
+		}
+	}
 
 
     /*
@@ -120,6 +125,8 @@ int main() {
         updateFlashLight();
         
         glm::mat4 v = getV();
+		glm::mat4 pv = p * v;
+
         glm::vec3 camPos;
         if (firstPerson) {
             camPos = stevePos;
@@ -148,11 +155,11 @@ int main() {
             
             lightSourceShader.use();
             // Sun
-            lightSourceShader.setMatrix4("mvp", p * v * sun.m);
+            lightSourceShader.setMatrix4("mvp", pv * sun.m);
             lightSourceShader.setVector3f("lightColor", sunColor.x, sunColor.y, sunColor.z);
             sun.Draw(lightSourceShader);
             // Moon
-            lightSourceShader.setMatrix4("mvp", p * v * moon.m);
+            lightSourceShader.setMatrix4("mvp", pv * moon.m);
             lightSourceShader.setVector3f("lightColor", 3*moonColor.x, 3*moonColor.y, 3*moonColor.z);
             moon.Draw(lightSourceShader);
             
@@ -208,7 +215,7 @@ int main() {
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         for (Model* modelPointer : lightShaderModels) {
             Model model = *modelPointer;
-            lightShader.setMatrix4("mvp", p * v * model.m);
+            lightShader.setMatrix4("mvp", pv * model.m);
             lightShader.setMatrix4("m", model.m);
             lightShader.setFloat("ns", model.ns);
             model.Draw(lightShader);
@@ -217,7 +224,7 @@ int main() {
         steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
         steve.updateRotation(hAngle-M_PI/2.0, glm::vec3(0, 1, 0));
         if (!firstPerson) {
-            lightShader.setMatrix4("mvp", p * v * steve.m);
+            lightShader.setMatrix4("mvp", pv * steve.m);
             lightShader.setMatrix4("m", steve.m);
             lightShader.setFloat("ns", steve.ns);
             steve.Draw(lightShader);
@@ -231,7 +238,7 @@ int main() {
         bumpShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
         bumpShader.setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
         bumpShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-        bumpShader.setMatrix4("mvp", p * v * bumpCube.m);
+        bumpShader.setMatrix4("mvp", pv * bumpCube.m);
         bumpShader.setMatrix4("m", bumpCube.m);
         
         bumpShader.setInteger("bump_mapping", true);
@@ -270,13 +277,16 @@ int main() {
         glActiveTexture(GL_TEXTURE0 + i);
         glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), i);
         glBindTexture(GL_TEXTURE_2D, flashlight_tex);
+
+
+		chunkShader.setMatrix4("m", chunks[0].getChunkModel());
+		chunkShader.setMatrix4("mvp", pv * chunks[0].getChunkModel());
+		chunks[0].render(chunkShader);
         
-		for (int j = 16; j < chunkSide * 16; j += 16) {
-			for (int t = 0; t < chunkSide * 16; t += 16) {
-				chunkShader.setMatrix4("m", cube.getM(6 + t, 2, j, 1.0f));
-				chunkShader.setMatrix4("mvp", p* v* cube.getM(6+t, 2, j, 1.0f));
-				chunk.render(chunkShader);
-			}
+		for (int j = 1; j < chunks.size(); j++) {
+			chunkShader.setMatrix4("m", chunks[j].getChunkModel());
+			chunkShader.setMatrix4("mvp", pv * chunks[j].getChunkModel());
+			chunks[j].render(chunkShader);
 		}
 
         // Flip Buffers and Draw
