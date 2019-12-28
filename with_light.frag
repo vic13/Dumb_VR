@@ -90,7 +90,7 @@ vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance) {
     // Specular
     float cosPhi = 0;
     if (cosTheta>0) {   //if bounced on outside surface
-        vec3 R = normalize(2*cosTheta*N - L);
+        vec3 R = 2*cosTheta*normalize(N) - normalize(L);
         cosPhi = dot(normalize(R), normalize(V));
     }
     float specular_strength = pow(clamp(cosPhi, 0, 1), ns);

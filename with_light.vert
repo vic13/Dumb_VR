@@ -21,11 +21,11 @@ void main() {
     uv = vertexUV;
     
     vec3 position_worldCoord = (m*vec4(position,1)).xyz;
-    L_pointlight = normalize(pointlightPosition-position_worldCoord);   // unit vector vertex -> point light
+    L_pointlight = pointlightPosition-position_worldCoord;   // vector vertex -> point light
     L_flashlight = flashlightPosition-position_worldCoord;  // if normalized : bad results with interpolation
     vec3 normal_worldCoord = (m*vec4(normal,0)).xyz; // takes into account rotation of the model
-    N = normalize(normal_worldCoord);
-    V = normalize(cameraPosition-position_worldCoord); //unit vector vertex -> camera
+    N = normal_worldCoord;
+    V = cameraPosition-position_worldCoord; //unit vector vertex -> camera
     
     
 }
