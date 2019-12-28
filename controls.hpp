@@ -43,6 +43,14 @@ void updateFlashLight() {
     }
 }
 
+bool addLight() {
+    if (keysPressed[GLFW_KEY_N]) {
+        keysPressed[GLFW_KEY_N] = false;
+        return true;
+    }
+    return false;
+}
+
 void updateStevePosition() {
     glm::vec3 planeDirection = glm::normalize(glm::vec3(direction.x, 0, direction.z));
     

@@ -15,15 +15,15 @@ class DayNightCycle
 {
 public:
     // light center + radius + period
-    constexpr static const float lightX = 3.0;
+    constexpr static const float lightX = 0.0;
     constexpr static const float lightY = 0.0;
-    constexpr static const float lightZ = 1.0;
-    constexpr static const float lightRadius = 300.0;
+    constexpr static const float lightZ = 0.0;
+    constexpr static const float lightRadius = 1000.0;
     constexpr static const float lightPeriod = 25.0;
     
     constexpr static const float transitionSmoothness = 0.25;
     constexpr static const float redSmoothness = 0.7;
-    constexpr static const float moonIntensity = 0.3;
+    constexpr static const float moonIntensity = 0.5;
     
     static glm::vec3 getSunPos(float timeValue) {
         float angle = timeValue*2*M_PI/lightPeriod;

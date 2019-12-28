@@ -6,8 +6,9 @@ layout(location=2) in vec2 vertexUV;
 struct PointLight {
     vec3 position;
 };
-#define NR_POINT_LIGHTS 4
+#define NR_POINT_LIGHTS 10
 
+uniform vec3 L_directional;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform vec3 flashlightPosition;
 uniform vec3 flashlightDirection;
@@ -19,6 +20,7 @@ out VS_OUT {
     vec2 uv;
     vec3 L_pointlights[NR_POINT_LIGHTS];
     vec3 L_flashlight;
+    vec3 L_directional;
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
@@ -32,6 +34,8 @@ void main() {
     
     // The following vectors are normalized in the fragment shader (useless to normalize before interpolation)
     
+    // L for directional light
+    vs_out.L_directional = L_directional;
     // L for point lights
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         vs_out.L_pointlights[i] = pointLights[i].position-position_worldCoord; // vector vertex -> point light

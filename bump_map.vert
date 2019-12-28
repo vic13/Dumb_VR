@@ -8,8 +8,9 @@ layout(location=4) in vec3 bitangent;
 struct PointLight {
     vec3 position;
 };
-#define NR_POINT_LIGHTS 4
+#define NR_POINT_LIGHTS 10
 
+uniform vec3 L_directional;
 uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform vec3 flashlightPosition;
 uniform vec3 flashlightDirection;
@@ -21,6 +22,7 @@ out VS_OUT {
     vec2 uv;
     vec3 L_pointlights[NR_POINT_LIGHTS];
     vec3 L_flashlight;
+    vec3 L_directional;
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
@@ -41,7 +43,8 @@ void main() {
     vec3 B = normalize(bitangent_worldCoord);
     mat3 TBN = mat3(T, B, N);
     mat3 invTBN = transpose(TBN); // cause orthogonal
-    
+    // L for directional light
+    vs_out.L_directional = invTBN * L_directional;                  // tangent space
     // L for point lights
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
         vec3 L_pointlight = pointLights[i].position-position_worldCoord;  // vector vertex -> point light

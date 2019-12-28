@@ -6,6 +6,7 @@
 #include "Model.hpp"
 #include "DayNightCycle.hpp"
 #include "chunk.hpp"
+#include "PointLight.hpp"
 
 // System Headers
 #include <glad/glad.h>
@@ -38,6 +39,7 @@ glm::mat4 getP();
 void setModelUniforms(Shader shader, Model* model, glm::mat4 p, glm::mat4 v);
 
 bool dayNightCycle = true;
+unsigned int maxNbPointLights = 10;
 
 int main() {
     GLFWwindow* mWindow = init_gl();
@@ -62,6 +64,7 @@ int main() {
     
     Shader lightSourceShader = Shader(LIGHT_SOURCE_VERT_PATH, LIGHT_SOURCE_FRAG_PATH, NULL, NULL, NULL);
     lightSourceShader.compile();
+    std::vector<Model*> lightSourceShaderModels;
     
 	Shader chunkShader = Shader(BLOCK_VERT_PATH, BLOCK_FRAG_PATH, NULL, NULL, NULL);
 	chunkShader.compile();
@@ -86,13 +89,16 @@ int main() {
 
     Model sun = Model("light1", false, 0, 0, 0, 100);
     Model moon = Model("light1", false, 0, 0, 0, 100);
+    lightSourceShaderModels.push_back(&sun);
+    lightSourceShaderModels.push_back(&moon);
+    Model torch = Model("light1", false, 0, 0, 0, 1);
     
     Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
 
 	Chunk chunk = Chunk();
     int chunkSide = 10;
-
+    int flashlightTextureSlot = 10;
 
     /*
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
@@ -106,16 +112,8 @@ int main() {
 	
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
-    std::vector<glm::vec3> pointLightPositions;
-    pointLightPositions.push_back(glm::vec3( 0.7f,  0.2f,  2.0f));
-    pointLightPositions.push_back(glm::vec3( 2.3f, -3.3f, -4.0f));
-    pointLightPositions.push_back(glm::vec3(-4.0f,  2.0f, -12.0f));
-    pointLightPositions.push_back(glm::vec3( 0.0f,  0.0f, -3.0f));
-    std::vector<glm::vec3> pointLightColors;
-    pointLightColors.push_back(glm::vec3( 1.0f,  0.0f,  0.0f));
-    pointLightColors.push_back(glm::vec3( 0.0f,  1.0f,  0.0f));
-    pointLightColors.push_back(glm::vec3( 0.0f,  0.0f,  1.0f));
-    pointLightColors.push_back(glm::vec3( 1.0f,  0.0f,  1.0f));
+    
+    std::vector<PointLight> pointLights;
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -128,6 +126,17 @@ int main() {
         updateStevePosition();
         updateCameraRotation();
         updateFlashLight();
+        if (pointLights.size() < maxNbPointLights) {
+            if (addLight()) {
+                glm::vec3 color(1.0f,  0.5f,  0.0f);
+                PointLight l = {stevePos, color};
+                pointLights.push_back(l);
+                Model* newTorch = new Model(torch);
+                newTorch->updatePosition(stevePos.x, stevePos.y, stevePos.z);
+                newTorch->color = color;
+                lightSourceShaderModels.push_back(newTorch);
+            }
+        }
         
         glm::mat4 v = getV();
         glm::vec3 camPos;
@@ -145,35 +154,31 @@ int main() {
             timeValue = glfwGetTime();
         }
         
-        glm::vec3 lightPos = glm::vec3(0, 10, 0);
-        glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+        glm::vec3 directionalLightL;
+        glm::vec3 directionalLightColor;
         // Day / night cycle
-        if (dayNightCycle) {
-            glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
-            glm::vec3 sunColor = DayNightCycle::getSunColor(timeValue);
-            sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
-            glm::vec3 moonPos = DayNightCycle::getMoonPos(timeValue);
-            glm::vec3 moonColor = DayNightCycle::getMoonColor(timeValue);
-            moon.updatePosition(moonPos.x, moonPos.y, moonPos.z);
-            
-            lightSourceShader.use();
-            // Sun
-            lightSourceShader.setMatrix4("mvp", p * v * sun.m);
-            lightSourceShader.setVector3f("lightColor", sunColor.x, sunColor.y, sunColor.z);
-            sun.Draw(lightSourceShader);
-            // Moon
-            lightSourceShader.setMatrix4("mvp", p * v * moon.m);
-            lightSourceShader.setVector3f("lightColor", 3*moonColor.x, 3*moonColor.y, 3*moonColor.z);
-            moon.Draw(lightSourceShader);
-            
-            
-            if (sunPos.y > moonPos.y) {
-                lightPos = sunPos;
-                lightColor = sunColor;
-            } else {
-                lightPos = moonPos;
-                lightColor = moonColor;
-            }
+        glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
+        sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
+        sun.color = DayNightCycle::getSunColor(timeValue);
+        
+        glm::vec3 moonPos = DayNightCycle::getMoonPos(timeValue);
+        moon.updatePosition(moonPos.x, moonPos.y, moonPos.z);
+        moon.color = DayNightCycle::getMoonColor(timeValue);
+        
+        lightSourceShader.use();
+        for (Model* modelPointer : lightSourceShaderModels) {
+            lightSourceShader.setMatrix4("mvp", p * v * modelPointer->m);
+            lightSourceShader.setVector3f("lightColor", modelPointer->color.x, modelPointer->color.y, modelPointer->color.z);
+            modelPointer->Draw(lightSourceShader);
+        }
+        
+        
+        if (sunPos.y > moonPos.y) {
+            directionalLightL = sunPos;
+            directionalLightColor = sun.color;
+        } else {
+            directionalLightL = moonPos;
+            directionalLightColor = moon.color;
         }
         
         
@@ -199,7 +204,7 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos, direction, right, camPos, lightColor, flashlightOn, flashlight_tex, pointLightPositions, pointLightColors, false);
+        lightShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer, p, v);
             modelPointer->Draw(lightShader);
@@ -216,7 +221,7 @@ int main() {
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         
         bumpShader.use();
-        bumpShader.setUniforms(stevePos, direction, right, camPos, lightColor, flashlightOn, flashlight_tex, pointLightPositions, pointLightColors, true);
+        bumpShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer, p, v);
             modelPointer->Draw(bumpShader);
@@ -224,17 +229,17 @@ int main() {
         
         // Skybox
         skyboxShader.use();
-        skyboxShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
+        skyboxShader.setVector3f("lightColor", directionalLightColor.x, directionalLightColor.y, directionalLightColor.z);
         skyboxShader.setMatrix4("mvp", p * getV(true) * skybox.m);
         skybox.Draw(skyboxShader);
 
 		//Chunk
 		chunkShader.use();
-        chunkShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
+        //chunkShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
         chunkShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
         chunkShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         chunkShader.setMatrix4("v", v);
-        chunkShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
+        //chunkShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
         chunkShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f); // purple
         chunkShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
         chunkShader.setFloat("flashlight.cosAngle", cos(M_PI / 9.0)); // 20°

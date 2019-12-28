@@ -43,7 +43,7 @@ public:
     float y;
     float z;
     float scale;
-    
+    glm::vec3 color = glm::vec3(0.0);
 
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.

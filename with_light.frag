@@ -1,6 +1,6 @@
 #version 330 core
 
-#define NR_POINT_LIGHTS 4
+#define NR_POINT_LIGHTS 10
 
 struct Flashlight {
     vec3 color;
@@ -19,12 +19,14 @@ uniform float ns;
 uniform vec3 pointlightColors[NR_POINT_LIGHTS];
 uniform bool bump_mapping;
 uniform Flashlight flashlight;
+uniform vec3 directional_color;
 uniform vec3 right;
 
 in VS_OUT {
     vec2 uv;
     vec3 L_pointlights[NR_POINT_LIGHTS];
     vec3 L_flashlight;
+    vec3 L_directional;
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
@@ -33,7 +35,7 @@ in VS_OUT {
 out vec4 color;
 
 
-
+vec3 L_directional_norm = normalize(fs_in.L_directional);
 vec3 L_flashlight_norm = normalize(fs_in.L_flashlight);
 float flashlightDistance = length(fs_in.L_flashlight);
 vec3 flashlightDirection_norm = normalize(fs_in.flashlightDirection);
@@ -61,12 +63,15 @@ void main() {
     vec3 lightColor = vec3(0.0);
     // Point light
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        lightColor += getLightColor(normalize(fs_in.L_pointlights[i]), pointlightColors[i], 0.0);
+        lightColor += getLightColor(normalize(fs_in.L_pointlights[i]), pointlightColors[i], length(fs_in.L_pointlights[i]));
     }
     // Flashlight
     if (flashlight.on) {
         lightColor += getFlashlightColor();
     }
+    
+    // Directional
+    lightColor += getLightColor(L_directional_norm, directional_color, 0.0);
     
     color = vec4(color0 * lightColor, 1);
 }
