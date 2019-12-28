@@ -164,6 +164,7 @@ int main() {
         }
         
         glm::vec3 directionalLightL;
+        glm::vec3 directionalLightColor;
         glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
         sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
         sun.color = DayNightCycle::getSunColor(timeValue);
@@ -213,13 +214,14 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
+        lightShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, false);
+        for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer, p, v);
             modelPointer->Draw(lightShader);
             setModelUniforms(lightShader, modelPointer, p, v);
             modelPointer->Draw(lightShader);
         }
         steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
-            setModelUniforms(lightShader, &steve, p, v);
         if (!firstPerson) {
             setModelUniforms(lightShader, &steve, p, v);
             steve.Draw(lightShader);
@@ -231,8 +233,6 @@ int main() {
         bumpShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer, p, v);
-            modelPointer->Draw(bumpShader);
-        }
             modelPointer->Draw(bumpShader);
         }
         
