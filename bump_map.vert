@@ -10,6 +10,13 @@ struct PointLight {
 };
 #define NR_POINT_LIGHTS 4
 
+uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform vec3 flashlightPosition;
+uniform vec3 flashlightDirection;
+uniform vec3 cameraPosition;
+uniform mat4 mvp;
+uniform mat4 m;
+
 out VS_OUT {
     vec2 uv;
     vec3 L_pointlights[NR_POINT_LIGHTS];
@@ -18,13 +25,6 @@ out VS_OUT {
     vec3 N;
     vec3 V;
 } vs_out;
-
-uniform PointLight pointLights[NR_POINT_LIGHTS];
-uniform vec3 flashlightPosition;
-uniform vec3 flashlightDirection;
-uniform vec3 cameraPosition;
-uniform mat4 mvp;
-uniform mat4 m;
 
 void main() {
     gl_Position = mvp * vec4(position, 1);

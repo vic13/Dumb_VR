@@ -2,22 +2,23 @@
 
 #define NR_POINT_LIGHTS 4
 
-out vec4 color;
-
-uniform sampler2D texture_diffuse1;
-uniform sampler2D texture_normal1;
-uniform sampler2D texture_flashlight;
-uniform float ns;
-uniform vec3 pointlightColor;
-
 struct Flashlight {
     vec3 color;
     float cosAngle;
     bool on;
 };
-uniform Flashlight flashlight;
-uniform bool bump_mapping;
+struct PointLight {
+    vec3 L;
+    vec3 color;
+};
 
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_normal1;
+uniform sampler2D texture_flashlight;
+uniform float ns;
+uniform vec3 pointlightColors[NR_POINT_LIGHTS];
+uniform bool bump_mapping;
+uniform Flashlight flashlight;
 uniform vec3 right;
 
 in VS_OUT {
@@ -29,11 +30,16 @@ in VS_OUT {
     vec3 V;
 } fs_in;
 
+out vec4 color;
+
+
+
 vec3 L_flashlight_norm = normalize(fs_in.L_flashlight);
+float flashlightDistance = length(fs_in.L_flashlight);
 vec3 flashlightDirection_norm = normalize(fs_in.flashlightDirection);
 vec3 N_norm = normalize(fs_in.N);
 vec3 V_norm = normalize(fs_in.V);
-float flashlightDistance = length(fs_in.L_flashlight);
+
 
 vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance);
 vec3 getFlashlightColor();
@@ -55,7 +61,7 @@ void main() {
     vec3 lightColor = vec3(0.0);
     // Point light
     for (int i = 0; i < NR_POINT_LIGHTS; i++) {
-        lightColor += getLightColor(normalize(fs_in.L_pointlights[i]), pointlightColor, 0.0);
+        lightColor += getLightColor(normalize(fs_in.L_pointlights[i]), pointlightColors[i], 0.0);
     }
     // Flashlight
     if (flashlight.on) {
