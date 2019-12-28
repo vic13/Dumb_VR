@@ -29,7 +29,6 @@ using std::endl;
 #define SKYBOX_VERT_PATH "skybox.vert"
 #define SKYBOX_FRAG_PATH "skybox.frag"
 #define BUMP_VERT_PATH "bump_map.vert"
-#define BUMP_FRAG_PATH "bump_map.frag"
 #define BLOCK_VERT_PATH "block_shader.vert"
 #define BLOCK_FRAG_PATH "block_shader.frag"
 
@@ -58,7 +57,7 @@ int main() {
     Shader lightSourceShader = Shader(LIGHT_SOURCE_VERT_PATH, LIGHT_SOURCE_FRAG_PATH, NULL, NULL, NULL);
     lightSourceShader.compile();
     
-    Shader bumpShader = Shader(BUMP_VERT_PATH, BUMP_FRAG_PATH, NULL, NULL, NULL);
+    Shader bumpShader = Shader(BUMP_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
     bumpShader.compile();
 
 	Shader chunkShader = Shader(BLOCK_VERT_PATH, BLOCK_FRAG_PATH, NULL, NULL, NULL);
@@ -165,13 +164,13 @@ int main() {
         lightShader.use();
         lightShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
         lightShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
+        bumpShader.setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-        lightShader.setMatrix4("v", v);
+        //lightShader.setMatrix4("v", v);
         
-        
+        lightShader.setInteger("bump_mapping", false);
         lightShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
         lightShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f); // purple
-        lightShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
         lightShader.setFloat("flashlight.cosAngle", cos(M_PI/9.0)); // 20°
         lightShader.setInteger("flashlight.on", flashlightOn);
         lightShader.setVector3f("right", right.x, right.y, right.z);
@@ -216,12 +215,25 @@ int main() {
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.use();
-        bumpShader.setVector3f("lightPosition", lightPos.x, lightPos.y, lightPos.z);
+        bumpShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
+        bumpShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
+        bumpShader.setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
         bumpShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         bumpShader.setMatrix4("mvp", p * v * bumpCube.m);
         bumpShader.setMatrix4("m", bumpCube.m);
+        
+        bumpShader.setInteger("bump_mapping", true);
         bumpShader.setVector3f("lightColor", lightColor.x, lightColor.y, lightColor.z);
         bumpShader.setFloat("ns", bumpCube.ns);
+        bumpShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
+        bumpShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f);
+        bumpShader.setFloat("flashlight.cosAngle", cos(M_PI/9.0)); // 20°
+        bumpShader.setInteger("flashlight.on", flashlightOn);
+        bumpShader.setVector3f("right", right.x, right.y, right.z);
+        i = 10;
+        glActiveTexture(GL_TEXTURE0 + i);
+        glUniform1i(glGetUniformLocation(bumpShader.ID, "texture_flashlight"), i);
+        glBindTexture(GL_TEXTURE_2D, flashlight_tex);
         bumpCube.Draw(bumpShader);
         
         // Skybox
