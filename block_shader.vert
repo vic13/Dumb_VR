@@ -27,8 +27,8 @@ void main(void) {
 	test = position_worldCoord;
 
 	L_pointlight = normalize(pointlightPosition-position_worldCoord);   // unit vector vertex -> point light
-	L_flashlight = normalize(flashlightPosition-position_worldCoord);  // unit vector vertex -> flashlight
-	vec3 normal_worldCoord = (m*vec4(normal, 0)).xyz; // takes into account rotation of the model
+    L_flashlight = flashlightPosition-position_worldCoord;  // if normalized : bad results with interpolation
+    vec3 normal_worldCoord = (m*vec4(normal,0)).xyz; // takes into account rotation of the model
     N = normalize(normal_worldCoord);
     V = normalize(cameraPosition-position_worldCoord); //unit vector vertex -> camera
         

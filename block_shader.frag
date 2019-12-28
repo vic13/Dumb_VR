@@ -23,7 +23,7 @@ in vec3 N;
 in vec3 V;
 in vec3 test;
 
-vec3 getLightColor(vec3 L, vec3 lightColor);
+vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance);
 vec3 getFlashlightColor();
 vec2 getFlashlightUV(float r, float phi);
 
@@ -48,7 +48,7 @@ void main(void) {
 	/* Lighting */
     vec3 lightColor = vec3(0.0);
     // Point light
-    lightColor += getLightColor(L_pointlight, pointlightColor);
+    lightColor += getLightColor(L_pointlight, pointlightColor, 0.0);
     // Flashlight
     if (flashlight.on) {
         lightColor += getFlashlightColor();
@@ -60,7 +60,7 @@ void main(void) {
 }
 
 vec3 getFlashlightColor() {
-    float cosTheta = dot(-flashlight.direction, L_flashlight);
+    float cosTheta = dot(normalize(-flashlight.direction), normalize(L_flashlight));
     
     if (cosTheta > flashlight.cosAngle) {
         float theta = acos(cosTheta);
@@ -76,7 +76,7 @@ vec3 getFlashlightColor() {
         }
         vec2 flashlight_uv = getFlashlightUV(r, phi);
         vec3 colorFlashlightTex = texture(texture_flashlight, flashlight_uv).xyz;
-        return getLightColor(L_flashlight, flashlight.color*colorFlashlightTex);
+        return getLightColor(L_flashlight, flashlight.color*colorFlashlightTex, length(L_flashlight));
     } else {
         return vec3(0.0);
     }
@@ -88,7 +88,7 @@ vec2 getFlashlightUV(float r, float phi) {
     return vec2(u,v);
 }
 
-vec3 getLightColor(vec3 L, vec3 lightColor) {
+vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance) {
     float ka = 0.3;
     float kd = 0.4;
     float ks = 0.3;
@@ -97,20 +97,21 @@ vec3 getLightColor(vec3 L, vec3 lightColor) {
     float ambient_strength = 1;
     
     // Diffuse
-    float cosTheta = dot(N, L);
+    float cosTheta = dot(normalize(N), normalize(L));
     float diffuse_strength = clamp(cosTheta, 0, 1);
     
     // Specular
     float cosPhi = 0;
-    if (dot(L, N)>0) {   //if bounced on outside surface
-        vec3 R = normalize(2*dot(N, L)*N - L);
-        cosPhi = dot(R, V);
+    if (cosTheta>0) {   //if bounced on outside surface
+        vec3 R = normalize(2*cosTheta*N - L);
+        cosPhi = dot(normalize(R), normalize(V));
     }
     float specular_strength = pow(clamp(cosPhi, 0, 1), ns);
 
     // Total
     float total_strength = ka*ambient_strength + kd*diffuse_strength + ks*specular_strength;
+    float attenuation = 1.0/(1.0+lightDistance);
     
-    return total_strength * lightColor;
+    return total_strength * lightColor * attenuation;
     
 }
