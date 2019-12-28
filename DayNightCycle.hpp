@@ -3,7 +3,7 @@
 #include <math.h>     // pow
 #include <cmath>      // fmod
 
-#include"Constants.hpp"
+#include "Constants.hpp"
 
 
 class DayNightCycle

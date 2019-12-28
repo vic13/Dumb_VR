@@ -1,3 +1,4 @@
+#include "Constants.hpp"
 
 // First person or third person
 bool firstPerson = true;
@@ -8,7 +9,7 @@ bool flashlightOn = false;
 glm::vec3 stevePos = glm::vec3(0,0,0);
 
 // camera init rotations
-float hAngle = 3.14/2;
+float hAngle = M_PI/2;
 float vAngle = 0;
 
 // camera speed and rotation speed
@@ -106,11 +107,11 @@ void updateStevePosition() {
 
 void updateCameraRotation() {
     vAngle -= rotationSpeed*mouseDeltaY;
-    if (vAngle > 3.14/2) {
-        vAngle = 3.14/2;
+    if (vAngle > M_PI/2) {
+        vAngle = M_PI/2;
     }
-    if (vAngle < -3.14/2) {
-        vAngle = -3.14/2;
+    if (vAngle < -M_PI/2) {
+        vAngle = -M_PI/2;
     }
     hAngle -= rotationSpeed*mouseDeltaX;
     mouseDeltaX = 0.0;
@@ -121,6 +122,6 @@ void updateCameraRotation() {
         sin(vAngle),
         cos(vAngle) * cos(hAngle)
     );
-    right = glm::vec3(sin(hAngle - 3.14f/2.0f), 0, cos(hAngle - 3.14f/2.0f));
+    right = glm::vec3(sin(hAngle - M_PI/2.0f), 0, cos(hAngle - M_PI/2.0f));
     up = glm::cross(right, direction);
 }
