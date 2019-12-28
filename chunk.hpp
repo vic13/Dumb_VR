@@ -83,7 +83,6 @@ private:
 						xNegativeMerge[0] = i - 5;
 						xNegativeMerge[1] = i - 2;
 						xNegativeMerge[2] = i - 1;
-
 						xVisible = true;
 					}
 					else {

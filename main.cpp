@@ -36,7 +36,7 @@ using std::endl;
 
 glm::mat4 getV(bool skybox = false);
 glm::mat4 getP();
-void setModelUniforms(Shader shader, Model* model, glm::mat4 p, glm::mat4 v);
+void setModelUniforms(Shader shader, Model* model, glm::mat4 pv);
 
 bool dayNightCycle = true;
 unsigned int maxNbPointLights = 10;
@@ -104,23 +104,22 @@ int main() {
 		}
 	}
     
-    int flashlightTextureSlot = 10;
-
-
-    /*
-    Model block = Model("block", true, 3, 10, 1, 0.02, 5);
-	std::vector<glm::mat4> block_positions;
-	for (float i = 0.0f; i < 96.0f*3; i += 4.0f) {
-		for (float j = 0.0f; j < 96.0f*3; j += 4.0f) {
-			glm::mat4 position = cube.getM(j, -10, i, 2.0f);
-			block_positions.push_back(position);
-		}
-	}*/
-	
+    int flashlightTextureSlot = 10;	
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
     
     std::vector<PointLight> pointLights;
+
+	chunkShader.use();
+	glActiveTexture(GL_TEXTURE0 + flashlightTextureSlot);
+	glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), flashlightTextureSlot);
+	glBindTexture(GL_TEXTURE_2D, flashlight_tex);
+
+
+	lightShader.use(); // Just send texture once 
+	glActiveTexture(GL_TEXTURE0 + flashlightTextureSlot);
+	glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), flashlightTextureSlot);
+	glBindTexture(GL_TEXTURE_2D, flashlight_tex);
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -175,7 +174,7 @@ int main() {
         
         lightSourceShader.use();
         for (Model* modelPointer : lightSourceShaderModels) {
-            lightSourceShader.setMatrix4("mvp", p * v * modelPointer->m);
+            lightSourceShader.setMatrix4("mvp", pv * modelPointer->m);
             lightSourceShader.setVector3f("lightColor", modelPointer->color.x, modelPointer->color.y, modelPointer->color.z);
             modelPointer->Draw(lightSourceShader);
         }
@@ -189,50 +188,27 @@ int main() {
             directionalLightColor = moon.color;
         }
         
-        
-        
-        
-        
-        
-        
-        /*
-        Model model = block;
-        lightShader.setMatrix4("mvp", p * v * block_positions[0]);
-        lightShader.setMatrix4("m", block_positions[0]);
-        lightShader.setFloat("ns", model.ns);
-        model.Draw(lightShader);
-        for (float i = 0.0f; i < 24.0f*3; i += 1.0f) {
-            for (float j = 0.0f; j < 24.0f*3; j += 1.0f) {
-                lightShader.setMatrix4("mvp", p * v * block_positions[j + 3*24*i]);
-                lightShader.setMatrix4("m", block_positions[j + 3*24 * i]);
-                lightShader.setFloat("ns", model.ns);
-                model.DrawMultiple();
-                //model.Draw(lightShader);
-            }
-        }*/
-        
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, false);
+        lightShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
-            setModelUniforms(lightShader, modelPointer, p, v);
-            modelPointer->Draw(lightShader);
-            setModelUniforms(lightShader, modelPointer, p, v);
+            setModelUniforms(lightShader, modelPointer, pv);
             modelPointer->Draw(lightShader);
         }
+
         steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
         if (!firstPerson) {
-            setModelUniforms(lightShader, &steve, p, v);
+            setModelUniforms(lightShader, &steve, pv);
             steve.Draw(lightShader);
         }
         
         
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
-        bumpShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, true);
+        bumpShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
-            setModelUniforms(bumpShader, modelPointer, p, v);
+            setModelUniforms(bumpShader, modelPointer, pv);
             modelPointer->Draw(bumpShader);
         }
         
@@ -255,17 +231,12 @@ int main() {
         chunkShader.setInteger("flashlight.on", flashlightOn);
         chunkShader.setVector3f("right", right.x, right.y, right.z);
         chunkShader.setFloat("ns", bumpCube.ns);
-        int i = 10;
-        glActiveTexture(GL_TEXTURE0 + i);
-        glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), i);
-        glBindTexture(GL_TEXTURE_2D, flashlight_tex);
-
 
 		chunkShader.setMatrix4("m", chunks[0].getChunkModel());
 		chunkShader.setMatrix4("mvp", pv * chunks[0].getChunkModel());
 		chunks[0].render(chunkShader);
         
-		for (int j = 1; j < chunks.size(); j++) {
+		for (unsigned int j = 1; j < chunks.size(); j++) {
 			chunkShader.setMatrix4("m", chunks[j].getChunkModel());
 			chunkShader.setMatrix4("mvp", pv * chunks[j].getChunkModel());
 			chunks[j].render(chunkShader);
@@ -280,8 +251,8 @@ int main() {
 }
 
 
-void setModelUniforms(Shader shader, Model* model, glm::mat4 p, glm::mat4 v) {
-    shader.setMatrix4("mvp", p * v * model->m);
+void setModelUniforms(Shader shader, Model* model, glm::mat4 pv) {
+    shader.setMatrix4("mvp", pv * model->m);
     shader.setMatrix4("m", model->m);
     shader.setFloat("ns", model->ns);
 }
@@ -311,8 +282,4 @@ glm::mat4 getV(bool skybox) {
     }
     
     return glm::lookAt(camPos, lookAt, up); // Head is up (set to 0,-1,0 to look upside-down)
-}
-
-void setupShader() {
-    
 }
