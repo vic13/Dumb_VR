@@ -5,17 +5,21 @@ layout(location=2) in vec2 vertexUV;
 layout(location=3) in vec3 tangent;
 layout(location=4) in vec3 bitangent;
 
+struct PointLight {
+    vec3 position;
+};
+#define NR_POINT_LIGHTS 4
+
 out VS_OUT {
     vec2 uv;
-    vec3 L_pointlight;
+    vec3 L_pointlights[NR_POINT_LIGHTS];
     vec3 L_flashlight;
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
 } vs_out;
 
-
-uniform vec3 pointlightPosition;
+uniform PointLight pointLights[NR_POINT_LIGHTS];
 uniform vec3 flashlightPosition;
 uniform vec3 flashlightDirection;
 uniform vec3 cameraPosition;
@@ -28,14 +32,9 @@ void main() {
     
     vec3 position_worldCoord = (m*vec4(position,1)).xyz;
     
-    // The following vectors are normalized in the fragment shader (useless to normalize before interpolation)
-    vec3 L_pointlight = pointlightPosition-position_worldCoord;  // vector vertex -> point light
-    vec3 L_flashlight = flashlightPosition-position_worldCoord;  // vector vertex -> flashlight
-    vec3 N = (m*vec4(normal,0)).xyz;;                            // takes into account rotation of the model
-    vec3 V = cameraPosition-position_worldCoord;                 // vector vertex -> camera
-    
-    
-    N = normalize(N);
+    // TBN
+    vec3 normal_worldCoord = (m*vec4(normal, 0)).xyz;;                            // takes into account rotation of the model
+    vec3 N = normalize(normal_worldCoord);
     vec3 tangent_worldCoord = (m * vec4(tangent, 0)).xyz;
     vec3 T = normalize(tangent_worldCoord);
     vec3 bitangent_worldCoord = (m * vec4(bitangent, 0)).xyz;
@@ -43,15 +42,21 @@ void main() {
     mat3 TBN = mat3(T, B, N);
     mat3 invTBN = transpose(TBN); // cause orthogonal
     
-    vec3 L_pointlight_tangent = invTBN * L_pointlight;
-    vec3 L_flashlight_tangent = invTBN * L_flashlight;
-    vec3 flashlightDirection_tangent = invTBN * flashlightDirection;
-    vec3 V_tangent = invTBN * V;
+    // L for point lights
+    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+        vec3 L_pointlight = pointLights[i].position-position_worldCoord;  // vector vertex -> point light
+        vs_out.L_pointlights[i] = invTBN * L_pointlight;                  // tangent space
+    }
+    // L for flashlight
+    vec3 L_flashlight = flashlightPosition-position_worldCoord;     // vector vertex -> flashlight
+    vs_out.L_flashlight = invTBN * L_flashlight;                    // tangent space
+    // Flashlight direction
+    vs_out.flashlightDirection = invTBN * flashlightDirection;      // tangent space
     
-    vs_out.L_pointlight = L_pointlight_tangent;
-    vs_out.L_flashlight = L_flashlight_tangent;
-    vs_out.flashlightDirection = flashlightDirection_tangent;
-    vs_out.N = vec3(0.0); //not used
-    vs_out.V = V_tangent;
+    // V
+    vec3 V = cameraPosition-position_worldCoord;                    // vector vertex -> camera
+    vs_out.V = invTBN * V;                                          // tangent space
     
+    // N not used
+    vs_out.N = vec3(0.0);
 }

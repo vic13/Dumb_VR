@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <string>
 
 // Def
 using std::cout;
@@ -67,7 +68,7 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model donut = Model("donut", true, 3, 0, 0, 5, 2);
+    Model donut = Model("donut", true, 3, 0, 0, 5, 5);
     Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
     Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
     lightShaderModels.push_back(&donut);
@@ -99,6 +100,12 @@ int main() {
 	}*/
 	
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
+    
+    std::vector<glm::vec3> pointLightPositions;
+    pointLightPositions.push_back(glm::vec3( 0.7f,  0.2f,  2.0f));
+    pointLightPositions.push_back(glm::vec3( 2.3f, -3.3f, -4.0f));
+    pointLightPositions.push_back(glm::vec3(-4.0f,  2.0f, -12.0f));
+    pointLightPositions.push_back(glm::vec3( 0.0f,  0.0f, -3.0f));
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -162,9 +169,14 @@ int main() {
         
         // Models with lighting
         lightShader.use();
-        lightShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
+        for (int i=0; i<pointLightPositions.size(); i++) {
+            glm::vec3 position = pointLightPositions[i];
+            std::string name = "pointLights["+std::to_string(i)+"].position";
+            lightShader.setVector3f(name.c_str(), position.x, position.y, position.z);
+        }
+        //lightShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
         lightShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
-        bumpShader.setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
+        lightShader.setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
         lightShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         //lightShader.setMatrix4("v", v);
         
@@ -215,7 +227,7 @@ int main() {
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.use();
-        bumpShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
+        //bumpShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
         bumpShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
         bumpShader.setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
         bumpShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);

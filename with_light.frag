@@ -1,6 +1,6 @@
 #version 330 core
 
-
+#define NR_POINT_LIGHTS 4
 
 out vec4 color;
 
@@ -22,14 +22,13 @@ uniform vec3 right;
 
 in VS_OUT {
     vec2 uv;
-    vec3 L_pointlight;
+    vec3 L_pointlights[NR_POINT_LIGHTS];
     vec3 L_flashlight;
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
 } fs_in;
 
-vec3 L_pointlight_norm = normalize(fs_in.L_pointlight);
 vec3 L_flashlight_norm = normalize(fs_in.L_flashlight);
 vec3 flashlightDirection_norm = normalize(fs_in.flashlightDirection);
 vec3 N_norm = normalize(fs_in.N);
@@ -41,6 +40,9 @@ vec3 getFlashlightColor();
 vec2 getFlashlightUV(float r, float phi);
 
 void main() {
+    
+    
+    
     if (bump_mapping) {
         vec3 normal = texture(texture_normal1, fs_in.uv).rgb;
         N_norm = normalize(normal * 2.0 - 1.0);
@@ -52,7 +54,9 @@ void main() {
     /* Lighting */
     vec3 lightColor = vec3(0.0);
     // Point light
-    lightColor += getLightColor(L_pointlight_norm, pointlightColor, 0.0);
+    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+        lightColor += getLightColor(normalize(fs_in.L_pointlights[i]), pointlightColor, 0.0);
+    }
     // Flashlight
     if (flashlight.on) {
         lightColor += getFlashlightColor();
