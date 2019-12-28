@@ -96,9 +96,16 @@ int main() {
     Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
 
-	Chunk chunk = Chunk();
-    int chunkSide = 10;
+	std::vector<Chunk> chunks;
+	int chunkSide = 30;
+	for (int j = 16; j < chunkSide * 16; j += 16) {
+		for (int t = 0; t < chunkSide * 16; t += 16) {
+			chunks.push_back(Chunk(6+t, 2, j, 1.0f));
+		}
+	}
+    
     int flashlightTextureSlot = 10;
+
 
     /*
     Model block = Model("block", true, 3, 10, 1, 0.02, 5);
@@ -139,6 +146,8 @@ int main() {
         }
         
         glm::mat4 v = getV();
+		glm::mat4 pv = p * v;
+
         glm::vec3 camPos;
         if (firstPerson) {
             camPos = stevePos;
@@ -155,8 +164,6 @@ int main() {
         }
         
         glm::vec3 directionalLightL;
-        glm::vec3 directionalLightColor;
-        // Day / night cycle
         glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
         sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
         sun.color = DayNightCycle::getSunColor(timeValue);
@@ -185,6 +192,8 @@ int main() {
         
         
         
+        
+        
         /*
         Model model = block;
         lightShader.setMatrix4("mvp", p * v * block_positions[0]);
@@ -204,13 +213,13 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, false);
-        for (Model* modelPointer : lightShaderModels) {
+            setModelUniforms(lightShader, modelPointer, p, v);
+            modelPointer->Draw(lightShader);
             setModelUniforms(lightShader, modelPointer, p, v);
             modelPointer->Draw(lightShader);
         }
         steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
-        steve.updateRotation(hAngle-M_PI/2.0, glm::vec3(0, 1, 0));
+            setModelUniforms(lightShader, &steve, p, v);
         if (!firstPerson) {
             setModelUniforms(lightShader, &steve, p, v);
             steve.Draw(lightShader);
@@ -219,11 +228,11 @@ int main() {
         
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
-        
-        bumpShader.use();
         bumpShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, flashlightTextureSlot, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer, p, v);
+            modelPointer->Draw(bumpShader);
+        }
             modelPointer->Draw(bumpShader);
         }
         
@@ -250,13 +259,16 @@ int main() {
         glActiveTexture(GL_TEXTURE0 + i);
         glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), i);
         glBindTexture(GL_TEXTURE_2D, flashlight_tex);
+
+
+		chunkShader.setMatrix4("m", chunks[0].getChunkModel());
+		chunkShader.setMatrix4("mvp", pv * chunks[0].getChunkModel());
+		chunks[0].render(chunkShader);
         
-		for (int j = 16; j < chunkSide * 16; j += 16) {
-			for (int t = 0; t < chunkSide * 16; t += 16) {
-				chunkShader.setMatrix4("m", cube.getM(6 + t, 2, j, 1.0f));
-				chunkShader.setMatrix4("mvp", p* v* cube.getM(6+t, 2, j, 1.0f));
-				chunk.render(chunkShader);
-			}
+		for (int j = 1; j < chunks.size(); j++) {
+			chunkShader.setMatrix4("m", chunks[j].getChunkModel());
+			chunkShader.setMatrix4("mvp", pv * chunks[j].getChunkModel());
+			chunks[j].render(chunkShader);
 		}
 
         // Flip Buffers and Draw
