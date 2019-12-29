@@ -49,5 +49,6 @@ void main() {
     vs_out.V = cameraPosition-position_worldCoord;                 // vector vertex -> camera
     // N
     vs_out.N = (m*vec4(normal,0)).xyz;;                            // takes into account rotation of the model
-    
+    // coord (not used)
+    vs_out.coord = vec4(0.0);
 }

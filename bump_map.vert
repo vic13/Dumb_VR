@@ -63,4 +63,6 @@ void main() {
     
     // N not used
     vs_out.N = vec3(0.0);
+    // coord (not used)
+    vs_out.coord = vec4(0.0);
 }
