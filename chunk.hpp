@@ -332,7 +332,7 @@ public:
 		if (!elements)
 			return;
 
-		int i = 4;
+		int i = 1;
 
 		glEnable(GL_CULL_FACE);  // Order of the vertices matters because of this. Vertices need to be placed in a clock-wise manner otherwise they won't be displayed. Read more at https://en.wikipedia.org/wiki/Back-face_culling
 		glEnable(GL_DEPTH_TEST);
@@ -340,10 +340,10 @@ public:
 		std::string name = "texture_diffuse";
 		std::string number = "1";
 		const GLchar* uniformName = (name + number).c_str();
+
 		glActiveTexture(GL_TEXTURE0);
 		glUniform1i(glGetUniformLocation(shader.ID, uniformName), 0);
 		glBindTexture(GL_TEXTURE_2D, this->texture);
-
 
 		glBindVertexArray(this->VAO);
 		glDrawArrays(GL_TRIANGLES, 0, elements);

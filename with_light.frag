@@ -18,6 +18,7 @@ uniform sampler2D texture_flashlight;
 uniform float ns;
 uniform vec3 pointlightColors[NR_POINT_LIGHTS];
 uniform bool bump_mapping;
+uniform bool chunk; // True if we are dealing with a Chunk
 uniform Flashlight flashlight;
 uniform vec3 directional_color;
 uniform vec3 right;
@@ -30,6 +31,7 @@ in VS_OUT {
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
+	vec4 coord; // Only used to compute the UV for the Chunk
 } fs_in;
 
 out vec4 color;
@@ -46,18 +48,17 @@ vec3 V_norm = normalize(fs_in.V);
 vec3 getLightColor(vec3 L, vec3 lightColor, float lightDistance);
 vec3 getFlashlightColor();
 vec2 getFlashlightUV(float r, float phi);
+vec3 getColorBeforeLight();
 
 void main() {
-    
-    
+
+	vec3 colorBeforeLight = getColorBeforeLight();
     
     if (bump_mapping) {
         vec3 normal = texture(texture_normal1, fs_in.uv).rgb;
         N_norm = normalize(normal * 2.0 - 1.0);
     }
     
-    
-    vec3 color0 = texture(texture_diffuse1, fs_in.uv).xyz;
     
     /* Lighting */
     vec3 lightColor = vec3(0.0);
@@ -73,7 +74,7 @@ void main() {
     // Directional
     lightColor += getLightColor(L_directional_norm, directional_color, 0.0);
     
-    color = vec4(color0 * lightColor, 1);
+    color = vec4(colorBeforeLight * lightColor, 1);
 }
 
 
@@ -134,3 +135,23 @@ vec3 getLightColor(vec3 L_norm, vec3 lightColor, float lightDistance) {
     return total_strength * lightColor * attenuation;
     
 }
+
+vec3 getColorBeforeLight() {
+    if(chunk){
+        vec2 chunk_uv;	
+        if(fs_in.coord.w < 0) {
+            chunk_uv = vec2(0.0625 * (fract(fs_in.coord.x) + fs_in.coord.w), fs_in.coord.z);
+        }
+		
+        else {	
+            chunk_uv = vec2( 0.0625*(fs_in.coord.w + fract(fs_in.coord.x + fs_in.coord.z)), - fs_in.coord.y);
+        }
+
+        return texture(texture_diffuse1, chunk_uv).xyz;
+	}
+
+    else{
+        return texture(texture_diffuse1, fs_in.uv).xyz;
+    }
+}
+

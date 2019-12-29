@@ -26,6 +26,7 @@ out VS_OUT {
     vec3 flashlightDirection;
     vec3 N;
     vec3 V;
+    vec4 coord;
 } vs_out;
 
 void main() {

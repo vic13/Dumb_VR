@@ -5,7 +5,7 @@
 #include "controls.hpp"
 #include "Model.hpp"
 #include "DayNightCycle.hpp"
-#include "chunk.hpp"
+#include "Chunk.hpp"
 #include "PointLight.hpp"
 
 // System Headers
@@ -31,8 +31,7 @@ using std::endl;
 #define SKYBOX_VERT_PATH "skybox.vert"
 #define SKYBOX_FRAG_PATH "skybox.frag"
 #define BUMP_VERT_PATH "bump_map.vert"
-#define BLOCK_VERT_PATH "block_shader.vert"
-#define BLOCK_FRAG_PATH "block_shader.frag"
+#define BLOCK_VERT_PATH "chunk.vert"
 
 glm::mat4 getV(bool skybox = false);
 glm::mat4 getP();
@@ -66,7 +65,7 @@ int main() {
     lightSourceShader.compile();
     std::vector<Model*> lightSourceShaderModels;
     
-	Shader chunkShader = Shader(BLOCK_VERT_PATH, BLOCK_FRAG_PATH, NULL, NULL, NULL);
+	Shader chunkShader = Shader(BLOCK_VERT_PATH, LIGHT_FRAG_PATH, NULL, NULL, NULL);
 	chunkShader.compile();
 
     // Matrices
@@ -96,17 +95,16 @@ int main() {
     Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
 
-	std::vector<Chunk> chunks;
+	std::vector<Chunk *> chunks;
 	int chunkSide = 30;
 	for (int j = 16; j < chunkSide * 16; j += 16) {
 		for (int t = 0; t < chunkSide * 16; t += 16) {
-			chunks.push_back(Chunk(6+t, 2, j, 1.0f));
+			chunks.push_back(new Chunk(6+t, 2, j, 1.0f));
 		}
 	}
     
     int flashlightTextureSlot = 10;	
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
-    
     
     std::vector<PointLight> pointLights;
 
@@ -219,28 +217,18 @@ int main() {
         skybox.Draw(skyboxShader);
 
 		//Chunk
-		chunkShader.use();
-        //chunkShader.setVector3f("pointlightPosition", lightPos.x, lightPos.y, lightPos.z);
-        chunkShader.setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
-        chunkShader.setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
-        chunkShader.setMatrix4("v", v);
-        //chunkShader.setVector3f("pointlightColor", lightColor.x, lightColor.y, lightColor.z);
-        chunkShader.setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f); // purple
-        chunkShader.setVector3f("flashlight.direction", direction.x, direction.y, direction.z);
-        chunkShader.setFloat("flashlight.cosAngle", cos(M_PI / 9.0)); // 20°
-        chunkShader.setInteger("flashlight.on", flashlightOn);
-        chunkShader.setVector3f("right", right.x, right.y, right.z);
+        chunkShader.use();
+        chunkShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false, true);
+        chunkShader.setMatrix4("m", chunks[0]->getChunkModel());
+        chunkShader.setMatrix4("mvp", pv * chunks[0]->getChunkModel());
         chunkShader.setFloat("ns", bumpCube.ns);
-
-		chunkShader.setMatrix4("m", chunks[0].getChunkModel());
-		chunkShader.setMatrix4("mvp", pv * chunks[0].getChunkModel());
-		chunks[0].render(chunkShader);
+        chunks[0]->render(chunkShader);
         
-		for (unsigned int j = 1; j < chunks.size(); j++) {
-			chunkShader.setMatrix4("m", chunks[j].getChunkModel());
-			chunkShader.setMatrix4("mvp", pv * chunks[j].getChunkModel());
-			chunks[j].render(chunkShader);
-		}
+        for (unsigned int j = 1; j < chunks.size(); j++) {
+            chunkShader.setMatrix4("m", chunks[j]->getChunkModel());
+            chunkShader.setMatrix4("mvp", pv * chunks[j]->getChunkModel());
+            chunks[j]->renderMultiple();
+        }
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);

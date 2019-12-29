@@ -43,11 +43,12 @@ public:
 
 	void setMatrix4(const GLchar *name, const glm::mat4 &matrix);
     
-    void setUniforms(glm::vec3 stevePos, glm::vec3 direction, glm::vec3 right, glm::vec3 camPos, bool flashlightOn, GLuint flashlight_tex, std::vector<PointLight> pointLights, glm::vec3 directionalL, glm::vec3 directionalColor, bool bumpMapping) {
+    void setUniforms(glm::vec3 stevePos, glm::vec3 direction, glm::vec3 right, glm::vec3 camPos, bool flashlightOn, GLuint flashlight_tex, std::vector<PointLight> pointLights, glm::vec3 directionalL, glm::vec3 directionalColor, bool bumpMapping, bool isChunk=false) {
         setVector3f("flashlightPosition", stevePos.x, stevePos.y, stevePos.z);
         setVector3f("flashlightDirection", direction.x, direction.y, direction.z);
         setVector3f("cameraPosition", camPos.x, camPos.y, camPos.z);
         setInteger("bump_mapping", bumpMapping);
+        setInteger("chunk", isChunk);
         setVector3f("flashlight.color", 1.0f, 1.0f, 1.0f);
         setFloat("flashlight.cosAngle", cos(M_PI/9.0)); // 20°
         setInteger("flashlight.on", flashlightOn);
