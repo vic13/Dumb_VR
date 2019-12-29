@@ -29,6 +29,7 @@ out VS_OUT {
 
 void main(void) {
 	vs_out.coord = coord;
+    
 	gl_Position = mvp * vec4(coord.xyz, 1);
 
 	//vs_out.uv = uv; 
@@ -50,5 +51,7 @@ void main(void) {
     vs_out.V = cameraPosition-position_worldCoord;                 // vector vertex -> camera
     // N
     vs_out.N = (vec4(normal,0)).xyz;;                            // takes into account rotation of the model
+
+    vs_out.uv = vec2(0.0f); // not used. However it must be initialized.
         
 }
