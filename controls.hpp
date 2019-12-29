@@ -25,6 +25,8 @@ float g = 0.3;
 bool falling = false;
 float fallingT = 0;
 
+float flashlightLatency = 0.9;
+glm::vec3 flashlightDirection;
 glm::vec3 direction;
 glm::vec3 right;
 glm::vec3 up;
@@ -38,6 +40,7 @@ void updateFirstPerson() {
 }
 
 void updateFlashLight() {
+    flashlightDirection = glm::normalize((1.0f-flashlightLatency)*direction + flashlightLatency*flashlightDirection);
     if (keysPressed[GLFW_KEY_L]) {
         keysPressed[GLFW_KEY_L] = false;
         flashlightOn = !flashlightOn;

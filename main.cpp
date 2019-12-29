@@ -189,7 +189,7 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false);
+        lightShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer, pv);
             modelPointer->Draw(lightShader);
@@ -204,7 +204,7 @@ int main() {
         
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
-        bumpShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, true);
+        bumpShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer, pv);
             modelPointer->Draw(bumpShader);
@@ -218,7 +218,7 @@ int main() {
 
 		//Chunk
         chunkShader.use();
-        chunkShader.setUniforms(stevePos, direction, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false, true);
+        chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false, true);
         chunkShader.setMatrix4("m", chunks[0]->getChunkModel());
         chunkShader.setMatrix4("mvp", pv * chunks[0]->getChunkModel());
         chunkShader.setFloat("ns", bumpCube.ns);

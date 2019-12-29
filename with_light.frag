@@ -95,8 +95,7 @@ vec3 getFlashlightColor() {
 //        }
         vec2 flashlight_uv = getFlashlightUV(r, phi);
         vec3 colorFlashlightTex = texture(texture_flashlight, flashlight_uv).xyz;
-        return getLightColor(L_flashlight_norm, flashlight.color*colorFlashlightTex, flashlightDistance);
-        return flashlight.color;
+        return 2.0*getLightColor(L_flashlight_norm, flashlight.color*colorFlashlightTex, flashlightDistance);
     } else {
         return vec3(0.0);
     }
@@ -130,7 +129,7 @@ vec3 getLightColor(vec3 L_norm, vec3 lightColor, float lightDistance) {
 
     // Total
     float total_strength = ka*ambient_strength + kd*diffuse_strength + ks*specular_strength;
-    float attenuation = 1.0/(1.0+lightDistance);
+    float attenuation = 1.0/(1.0+0.5*lightDistance);
     
     return total_strength * lightColor * attenuation;
     
