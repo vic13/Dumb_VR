@@ -25,7 +25,7 @@ class Chunk {
 private:
 	uint8_t block[CX][CY][CZ];
 	GLuint vbo;
-	GLuint VAO, VBO, EBO;
+	GLuint VAO, VBO;
 	GLuint texture;
 	int elements;
 	bool changed;
@@ -44,7 +44,6 @@ private:
 	void update() {
 		changed = false;
 
-		// Each block has 36 vertices hence the 6*6
 		int i = 0;
 		int xNegativeMerge[3] = { 0, 0, 0 };
 		int yNegativeMerge[3] = { 0, 0, 0 };
@@ -95,7 +94,7 @@ private:
 						vertices[yNegativeMerge[2]] = createVertex(x + 1, y, z + 1, type + 128, 0.0f, -1.0f, 0.0f);
 					}
 
-					else if (y > 0 && !block[x][y - 1][z] || y == 0) {
+					else if (y > 0 && block[x][y - 1][z] == 0 || y == 0) {
 						vertices.push_back(createVertex(x, y, z, type + 128, 0.0f, -1.0f, 0.0f));
 						vertices.push_back(createVertex(x + 1, y, z, type + 128, 0.0f, -1.0f, 0.0f));
 						vertices.push_back(createVertex(x, y, z + 1, type + 128, 0.0f, -1.0f, 0.0f));
@@ -154,7 +153,6 @@ private:
 						xPositiveMerge[0] = i - 6;
 						xPositiveMerge[1] = i - 2;
 						xPositiveMerge[2] = i - 3;
-
 						xVisible = true;
 					}
 					else {
@@ -168,7 +166,7 @@ private:
 						vertices[yPositiveMerge[2]] = createVertex(x, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f);
 					}
 
-					else if (y < CY - 2 && block[x][y + 1][z] == 0 || y == CY - 1 && mergeVertices) {
+					else if (y < CY - 2 && block[x][y + 1][z] == 0 || y == CY - 1) {
 						vertices.push_back(createVertex(x, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f));
 						vertices.push_back(createVertex(x, y + 1, z + 1, 3 + 128, 0.0f, 1.0f, 0.0f));
 						vertices.push_back(createVertex(x + 1, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f));
@@ -297,7 +295,7 @@ private:
 
 
 public:
-	Chunk(float x, float y, float z, float scale, bool mergeVertives=true) {
+	Chunk(float x, float y, float z, float scale, bool mergeVertices=true) {
 		memset(block, 2, sizeof(block));
 		this->mergeVertices = mergeVertices;
 		elements = 0;
@@ -332,8 +330,6 @@ public:
 		if (!elements)
 			return;
 
-		int i = 1;
-
 		glEnable(GL_CULL_FACE);  // Order of the vertices matters because of this. Vertices need to be placed in a clock-wise manner otherwise they won't be displayed. Read more at https://en.wikipedia.org/wiki/Back-face_culling
 		glEnable(GL_DEPTH_TEST);
 		
@@ -358,7 +354,7 @@ public:
 		// If this chunk is empty, we don't need to draw anything.
 		if (!elements)
 			return;
-
+        
 		glBindVertexArray(this->VAO);
 		glDrawArrays(GL_TRIANGLES, 0, elements);
 		glBindVertexArray(0);

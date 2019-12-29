@@ -31,13 +31,6 @@ void main(void) {
 	vs_out.coord = coord;
 	gl_Position = mvp * vec4(coord.xyz, 1);
 
-	if(coord.w < 0){
-		vs_out.uv = vec2(0.0625 * (fract(coord.x) + coord.w), coord.z);
-	}
-	else{	 	
-		vs_out.uv = vec2(0.0625 * (coord.w + fract(coord.x + coord.z)), - coord.y); 
-	}
-
 	//vs_out.uv = uv; 
     vec3 position_worldCoord = (m * vec4(coord.xyz , 1)).xyz;
     

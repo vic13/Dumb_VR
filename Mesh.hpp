@@ -46,10 +46,6 @@ public:
         // Now that we have all the required data, set the vertex buffers and its attribute pointers.
         this->setupMesh();
     }
-    
-    void DrawMultiple() {
-        glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
-    }
 
     // Render the mesh
     void Draw(Shader shader) 
@@ -88,13 +84,13 @@ public:
         // Draw mesh
         glBindVertexArray(this->VAO);
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
-        //glBindVertexArray(0);
+        glBindVertexArray(0);
 
         // Always good practice to set everything back to defaults once configured.
         for (GLuint i = 0; i < this->textures.size(); i++)
         {
-            //glActiveTexture(GL_TEXTURE0 + i);
-            //glBindTexture(GL_TEXTURE_2D, 0);
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
 

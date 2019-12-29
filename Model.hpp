@@ -69,12 +69,6 @@ public:
             this->meshes[i].Draw(shader);
     }
     
-    void DrawMultiple()
-    {
-        for(GLuint i = 0; i < this->meshes.size(); i++)
-            this->meshes[i].DrawMultiple();
-    }
-    
     void updatePosition(float x, float y, float z) {
         this->x = x;
         this->y = y;
