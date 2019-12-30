@@ -7,6 +7,7 @@
 #include "DayNightCycle.hpp"
 #include "Chunk.hpp"
 #include "PointLight.hpp"
+#include "World.hpp"
 
 // System Headers
 #include <glad/glad.h>
@@ -96,14 +97,7 @@ int main() {
     Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.1, {0.4, 0.5, 0.1, 5});
 
     Material chunkMaterial = {0.3, 0.3, 0.3, 5};
-	std::vector<Chunk *> chunks;
-	int chunkSide = 30;
-	for (int j = 16; j < chunkSide * 16; j += 16) {
-		for (int t = 0; t < chunkSide * 16; t += 16) {
-			chunks.push_back(new Chunk(6+t, 2, j, 1.0f));
-		}
-	}
-    
+    World world = World(30, chunkShader);  // Change Map Size here
     
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
@@ -225,14 +219,7 @@ int main() {
 		//Chunk
         chunkShader.use();
         chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
-        setModelUniforms(bumpShader, chunks[0]->getChunkModel(), pv, chunkMaterial);
-        chunks[0]->render(chunkShader);
-        
-        for (unsigned int j = 1; j < chunks.size(); j++) {
-            chunkShader.setMatrix4("m", chunks[j]->getChunkModel());
-            chunkShader.setMatrix4("mvp", pv * chunks[j]->getChunkModel());
-            chunks[j]->renderMultiple();
-        }
+        world.render(pv, chunkMaterial);
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);
