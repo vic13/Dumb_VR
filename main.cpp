@@ -38,7 +38,7 @@ glm::mat4 getP();
 void setModelUniforms(Shader shader, Model* model, glm::mat4 pv);
 
 bool dayNightCycle = true;
-unsigned int maxNbPointLights = 10;
+unsigned int maxNbTorchs = 10;
 
 int main() {
     GLFWwindow* mWindow = init_gl();
@@ -90,7 +90,8 @@ int main() {
     Model moon = Model("light1", false, 0, 0, 0, 100);
     lightSourceShaderModels.push_back(&sun);
     lightSourceShaderModels.push_back(&moon);
-    Model torch = Model("light1", false, 0, 0, 0, 1);
+    Model torchModel = Model("light1", false, 0, 0, 0, 1);
+    glm::vec3 torchColor(1.0f,  0.5f,  0.0f);
     
     Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
 
@@ -106,7 +107,7 @@ int main() {
     int flashlightTextureSlot = 10;	
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
-    std::vector<PointLight> pointLights;
+    std::vector<PointLight> torchs;
 
 	chunkShader.use();
 	glActiveTexture(GL_TEXTURE0 + flashlightTextureSlot);
@@ -130,15 +131,10 @@ int main() {
         updateStevePosition();
         updateCameraRotation();
         updateFlashLight();
-        if (pointLights.size() < maxNbPointLights) {
+        if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
-                glm::vec3 color(1.0f,  0.5f,  0.0f);
-                PointLight l = {stevePos, color};
-                pointLights.push_back(l);
-                Model* newTorch = new Model(torch);
-                newTorch->updatePosition(stevePos.x, stevePos.y, stevePos.z);
-                newTorch->color = color;
-                lightSourceShaderModels.push_back(newTorch);
+                PointLight l = {stevePos+0.5f*direction, torchColor};
+                torchs.push_back(l);
             }
         }
         
@@ -176,6 +172,12 @@ int main() {
             lightSourceShader.setVector3f("lightColor", modelPointer->color.x, modelPointer->color.y, modelPointer->color.z);
             modelPointer->Draw(lightSourceShader);
         }
+        lightSourceShader.setVector3f("lightColor", torchColor.x, torchColor.y, torchColor.z);
+        for (PointLight torch : torchs) {
+            torchModel.updatePosition(torch.position.x, torch.position.y, torch.position.z);
+            lightSourceShader.setMatrix4("mvp", pv * torchModel.m);
+            torchModel.Draw(lightSourceShader);
+        }
         
         
         if (sunPos.y > moonPos.y) {
@@ -189,7 +191,7 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false);
+        lightShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer, pv);
             modelPointer->Draw(lightShader);
@@ -204,7 +206,7 @@ int main() {
         
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
-        bumpShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, true);
+        bumpShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer, pv);
             modelPointer->Draw(bumpShader);
@@ -218,7 +220,7 @@ int main() {
 
 		//Chunk
         chunkShader.use();
-        chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, pointLights, directionalLightL, directionalLightColor, false, true);
+        chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
         chunkShader.setMatrix4("m", chunks[0]->getChunkModel());
         chunkShader.setMatrix4("mvp", pv * chunks[0]->getChunkModel());
         chunkShader.setFloat("ns", bumpCube.ns);
