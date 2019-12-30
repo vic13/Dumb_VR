@@ -7,6 +7,7 @@
 #include "DayNightCycle.hpp"
 #include "Chunk.hpp"
 #include "PointLight.hpp"
+#include "ParticleSource.hpp"
 
 // System Headers
 #include <glad/glad.h>
@@ -41,6 +42,8 @@ bool dayNightCycle = true;
 unsigned int maxNbTorchs = 10;
 
 int main() {
+    srand(time(NULL));
+    
     GLFWwindow* mWindow = init_gl();
     float timeValue = glfwGetTime();
     
@@ -93,11 +96,13 @@ int main() {
     Model torchModel = Model("light1", false, glm::vec3(0, 0, 0), 1);
     glm::vec3 torchColor(1.0f,  0.5f,  0.0f);
     
+    Model particleModel = Model("cube", false, glm::vec3(3, 0, 1), 0.002);
+    
     Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.1, {0.4, 0.5, 0.1, 5});
 
     Material chunkMaterial = {0.3, 0.3, 0.3, 5};
 	std::vector<Chunk *> chunks;
-	int chunkSide = 30;
+	int chunkSide = 3;
 	for (int j = 16; j < chunkSide * 16; j += 16) {
 		for (int t = 0; t < chunkSide * 16; t += 16) {
 			chunks.push_back(new Chunk(6+t, 2, j, 1.0f));
@@ -108,6 +113,7 @@ int main() {
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
     std::vector<PointLight> torchs;
+    std::vector<ParticleSource> particleSources;
     
     int flashlightTextureSlot = 10;
 	chunkShader.use(); // Just send texture once
@@ -136,8 +142,11 @@ int main() {
         updateFlashLight();
         if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
-                PointLight l = {stevePos+0.5f*direction, torchColor};
-                torchs.push_back(l);
+                glm::vec3 position = stevePos+0.5f*direction;
+                //PointLight l = {position, torchColor};
+                //torchs.push_back(l);
+                ParticleSource ps = ParticleSource(position, torchColor, glm::vec3(0.5f, 0.5f, 0.5f));
+                particleSources.push_back(ps);
             }
         }
         
@@ -162,13 +171,14 @@ int main() {
         glm::vec3 directionalLightL;
         glm::vec3 directionalLightColor;
         glm::vec3 sunPos = DayNightCycle::getSunPos(timeValue);
-        sun.updatePosition(sunPos.x, sunPos.y, sunPos.z);
+        sun.updatePosition(sunPos);
         sun.color = DayNightCycle::getSunColor(timeValue);
         
         glm::vec3 moonPos = DayNightCycle::getMoonPos(timeValue);
-        moon.updatePosition(moonPos.x, moonPos.y, moonPos.z);
+        moon.updatePosition(moonPos);
         moon.color = DayNightCycle::getMoonColor(timeValue);
         
+        // Light sources
         lightSourceShader.use();
         for (Model* modelPointer : lightSourceShaderModels) {
             lightSourceShader.setMatrix4("mvp", pv * modelPointer->m);
@@ -177,9 +187,18 @@ int main() {
         }
         lightSourceShader.setVector3f("lightColor", torchColor.x, torchColor.y, torchColor.z);
         for (PointLight torch : torchs) {
-            torchModel.updatePosition(torch.position.x, torch.position.y, torch.position.z);
+            torchModel.updatePosition(torch.position);
             lightSourceShader.setMatrix4("mvp", pv * torchModel.m);
             torchModel.Draw(lightSourceShader);
+        }
+        for (unsigned int i = 0; i<particleSources.size(); i++) {
+            particleSources[i].updateParticles();
+            for (Particle p : particleSources[i].getParticles()) {
+                lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
+                particleModel.updatePosition(p.position);
+                lightSourceShader.setMatrix4("mvp", pv * particleModel.m);
+                particleModel.Draw(lightSourceShader);
+            }
         }
         
         
@@ -200,7 +219,7 @@ int main() {
             modelPointer->Draw(lightShader);
         }
 
-        steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
+        steve.updatePosition(stevePos);
         if (!firstPerson) {
             setModelUniforms(lightShader, steve.m, pv, steve.material);
             steve.Draw(lightShader);

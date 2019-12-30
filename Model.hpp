@@ -70,10 +70,10 @@ public:
             this->meshes[i].Draw(shader);
     }
     
-    void updatePosition(float x, float y, float z) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
+    void updatePosition(glm::vec3 position) {
+        this->x = position.x;
+        this->y = position.y;
+        this->z = position.z;
         this->m = getM(x, y, z, this->scale);
     }
     
