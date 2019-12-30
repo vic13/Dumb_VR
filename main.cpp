@@ -35,7 +35,7 @@ using std::endl;
 
 glm::mat4 getV(bool skybox = false);
 glm::mat4 getP();
-void setModelUniforms(Shader shader, Model* model, glm::mat4 pv);
+void setModelUniforms(Shader shader, glm::mat4 m, glm::mat4 pv, Material material);
 
 bool dayNightCycle = true;
 unsigned int maxNbTorchs = 10;
@@ -72,30 +72,30 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model donut = Model("donut", true, 3, 0, 0, 5, 5);
-    Model cube = Model("cube", true, 3, 0, 1, 0.2, 5);
-    Model sphere = Model("smoothSphere", true, 3, 0, -1, 4, 20);
+    Model donut = Model("donut", true, glm::vec3(3, 0, 0), 5, {0.3, 0.6, 0, 5});
+    Model cube = Model("cube", true, glm::vec3(3, 0, 1), 0.2, {0.3, 0.3, 0.4, 20});
+    Model sphere = Model("smoothSphere", true, glm::vec3(3, 0, -1), 4, {0.3, 0.3, 0.4, 20});
     lightShaderModels.push_back(&donut);
     lightShaderModels.push_back(&cube);
     lightShaderModels.push_back(&sphere);
     
-    Model bumpCube = Model("bump_cube", true, 6, 0, 0, 0.5, 5, true, false);
-    Model bumpCube2 = Model("bump_cube", true, 8, 0, 0, 0.7, 5, true, false);
+    Model bumpCube = Model("bump_cube", true, glm::vec3(6, 0, 0), 0.5, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube2 = Model("bump_cube", true, glm::vec3(8, 0, 0), 0.7, {0.3, 0.4, 0.3, 5}, true, false);
     bumpShaderModels.push_back(&bumpCube);
     bumpShaderModels.push_back(&bumpCube2);
     
-    Model skybox = Model("skybox", false, 0, 0, 0, 1000);
+    Model skybox = Model("skybox", false, glm::vec3(0, 0, 0), 1000);
 
-    Model sun = Model("light1", false, 0, 0, 0, 100);
-    Model moon = Model("light1", false, 0, 0, 0, 100);
+    Model sun = Model("light1", false, glm::vec3(0, 0, 0), 100);
+    Model moon = Model("light1", false, glm::vec3(0, 0, 0), 100);
     lightSourceShaderModels.push_back(&sun);
     lightSourceShaderModels.push_back(&moon);
-    Model torchModel = Model("light1", false, 0, 0, 0, 1);
+    Model torchModel = Model("light1", false, glm::vec3(0, 0, 0), 1);
     glm::vec3 torchColor(1.0f,  0.5f,  0.0f);
     
-    Model steve = Model("steve", true, 0, 0, 0, 0.1, 5);
+    Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.1, {0.4, 0.5, 0.1, 5});
 
-
+    Material chunkMaterial = {0.3, 0.3, 0.3, 5};
 	std::vector<Chunk *> chunks;
 	int chunkSide = 30;
 	for (int j = 16; j < chunkSide * 16; j += 16) {
@@ -193,13 +193,13 @@ int main() {
         lightShader.use();
         lightShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
-            setModelUniforms(lightShader, modelPointer, pv);
+            setModelUniforms(lightShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(lightShader);
         }
 
         steve.updatePosition(stevePos.x, stevePos.y, stevePos.z);
         if (!firstPerson) {
-            setModelUniforms(lightShader, &steve, pv);
+            setModelUniforms(lightShader, steve.m, pv, steve.material);
             steve.Draw(lightShader);
         }
         
@@ -208,7 +208,7 @@ int main() {
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
-            setModelUniforms(bumpShader, modelPointer, pv);
+            setModelUniforms(bumpShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(bumpShader);
         }
         
@@ -221,9 +221,7 @@ int main() {
 		//Chunk
         chunkShader.use();
         chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
-        chunkShader.setMatrix4("m", chunks[0]->getChunkModel());
-        chunkShader.setMatrix4("mvp", pv * chunks[0]->getChunkModel());
-        chunkShader.setFloat("ns", bumpCube.ns);
+        setModelUniforms(bumpShader, chunks[0]->getChunkModel(), pv, chunkMaterial);
         chunks[0]->render(chunkShader);
         
         for (unsigned int j = 1; j < chunks.size(); j++) {
@@ -241,10 +239,13 @@ int main() {
 }
 
 
-void setModelUniforms(Shader shader, Model* model, glm::mat4 pv) {
-    shader.setMatrix4("mvp", pv * model->m);
-    shader.setMatrix4("m", model->m);
-    shader.setFloat("ns", model->ns);
+void setModelUniforms(Shader shader, glm::mat4 m, glm::mat4 pv, Material material) {
+    shader.setMatrix4("mvp", pv * m);
+    shader.setMatrix4("m", m);
+    shader.setFloat("material.ns", material.ns);
+    shader.setFloat("material.ka", material.ka);
+    shader.setFloat("material.kd", material.kd);
+    shader.setFloat("material.ks", material.ks);
 }
 
 
