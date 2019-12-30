@@ -104,21 +104,24 @@ int main() {
 		}
 	}
     
-    int flashlightTextureSlot = 10;	
+    
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
     std::vector<PointLight> torchs;
-
-	chunkShader.use();
+    
+    int flashlightTextureSlot = 10;
+	chunkShader.use(); // Just send texture once
 	glActiveTexture(GL_TEXTURE0 + flashlightTextureSlot);
 	glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), flashlightTextureSlot);
 	glBindTexture(GL_TEXTURE_2D, flashlight_tex);
-
-
 	lightShader.use(); // Just send texture once 
 	glActiveTexture(GL_TEXTURE0 + flashlightTextureSlot);
 	glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), flashlightTextureSlot);
 	glBindTexture(GL_TEXTURE_2D, flashlight_tex);
+    bumpShader.use(); // Just send texture once
+    glActiveTexture(GL_TEXTURE0 + flashlightTextureSlot);
+    glUniform1i(glGetUniformLocation(lightShader.ID, "texture_flashlight"), flashlightTextureSlot);
+    glBindTexture(GL_TEXTURE_2D, flashlight_tex);
     
     // Rendering Loop
     while (glfwWindowShouldClose(mWindow) == false) {
@@ -206,6 +209,7 @@ int main() {
         
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
+        bumpShader.use();
         bumpShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer->m, pv, modelPointer->material);
