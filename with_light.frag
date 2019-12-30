@@ -132,7 +132,7 @@ vec3 getLightColor(vec3 L_norm, vec3 lightColor, float lightDistance) {
 
     // Total
     float total_strength = material.ka*ambient_strength + material.kd*diffuse_strength + material.ks*specular_strength;
-    float attenuation = 1.0/(1.0+0.5*lightDistance);
+    float attenuation = 1.0/(1.0+0.3*lightDistance);
     
     return total_strength * lightColor * attenuation;
     

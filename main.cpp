@@ -40,6 +40,7 @@ void setModelUniforms(Shader shader, glm::mat4 m, glm::mat4 pv, Material materia
 
 bool dayNightCycle = true;
 unsigned int maxNbTorchs = 10;
+glm::vec3 steveHeight = glm::vec3(0, 2, 0);
 
 int main() {
     srand(time(NULL));
@@ -75,15 +76,15 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model donut = Model("donut", true, glm::vec3(3, 0, 0), 5, {0.3, 0.6, 0, 5});
-    Model cube = Model("cube", true, glm::vec3(3, 0, 1), 0.2, {0.3, 0.3, 0.4, 20});
-    Model sphere = Model("smoothSphere", true, glm::vec3(3, 0, -1), 4, {0.3, 0.3, 0.4, 20});
+    Model donut = Model("donut", true, glm::vec3(15, 0, 0), 50, {0.3, 0.6, 0, 5});
+    Model cube = Model("cube", true, glm::vec3(15, 0, -15), 2, {0.3, 0.3, 0.4, 20});
+    Model sphere = Model("smoothSphere", true, glm::vec3(30, 0, 0), 40, {0.3, 0.3, 0.4, 20});
     lightShaderModels.push_back(&donut);
     lightShaderModels.push_back(&cube);
     lightShaderModels.push_back(&sphere);
     
-    Model bumpCube = Model("bump_cube", true, glm::vec3(6, 0, 0), 0.5, {0.3, 0.4, 0.3, 5}, true, false);
-    Model bumpCube2 = Model("bump_cube", true, glm::vec3(8, 0, 0), 0.7, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube = Model("bump_cube", true, glm::vec3(30, 0, -15), 5, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube2 = Model("bump_cube", true, glm::vec3(45, 0, 0), 5, {0.3, 0.4, 0.3, 5}, true, false);
     bumpShaderModels.push_back(&bumpCube);
     bumpShaderModels.push_back(&bumpCube2);
     
@@ -93,12 +94,13 @@ int main() {
     Model moon = Model("light1", false, glm::vec3(0, 0, 0), 100);
     lightSourceShaderModels.push_back(&sun);
     lightSourceShaderModels.push_back(&moon);
-    Model torchModel = Model("light1", false, glm::vec3(0, 0, 0), 1);
+    Model torchModel = Model("torch", true, glm::vec3(0, 0, 0), 1, {0.3, 0.4, 0.3, 5});
     glm::vec3 torchColor(1.0f,  0.5f,  0.0f);
+    glm::vec3 torchHeight(0,0.9,0);
     
-    Model particleModel = Model("cube", false, glm::vec3(3, 0, 1), 0.002);
+    Model particleModel = Model("particle", false, glm::vec3(3, 0, 1), 0.02);
     
-    Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.1, {0.4, 0.5, 0.1, 5});
+    Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.8, {0.4, 0.5, 0.1, 5});
 
     Material chunkMaterial = {0.3, 0.3, 0.3, 5};
 	std::vector<Chunk *> chunks;
@@ -142,9 +144,9 @@ int main() {
         updateFlashLight();
         if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
-                glm::vec3 position = stevePos+0.5f*direction;
-                //PointLight l = {position, torchColor};
-                //torchs.push_back(l);
+                glm::vec3 position = stevePos+steveHeight+2.0f*direction+torchHeight;
+                PointLight l = {position, torchColor};
+                torchs.push_back(l);
                 ParticleSource ps = ParticleSource(position, torchColor, glm::vec3(0.5f, 0.5f, 0.5f));
                 particleSources.push_back(ps);
             }
@@ -182,20 +184,20 @@ int main() {
         lightSourceShader.use();
         for (Model* modelPointer : lightSourceShaderModels) {
             lightSourceShader.setMatrix4("mvp", pv * modelPointer->m);
-            lightSourceShader.setVector3f("lightColor", modelPointer->color.x, modelPointer->color.y, modelPointer->color.z);
+            lightSourceShader.setVector3f("lightColor", 2*modelPointer->color.x, 2*modelPointer->color.y, 2*modelPointer->color.z);
             modelPointer->Draw(lightSourceShader);
-        }
-        lightSourceShader.setVector3f("lightColor", torchColor.x, torchColor.y, torchColor.z);
-        for (PointLight torch : torchs) {
-            torchModel.updatePosition(torch.position);
-            lightSourceShader.setMatrix4("mvp", pv * torchModel.m);
-            torchModel.Draw(lightSourceShader);
         }
         for (unsigned int i = 0; i<particleSources.size(); i++) {
             particleSources[i].updateParticles();
             for (Particle p : particleSources[i].getParticles()) {
-                lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
                 particleModel.updatePosition(p.position);
+                float cosTheta = glm::acos(glm::dot(planeDirection, glm::vec3(1,0,0)));
+                if (planeDirection.z > 0) {
+                    cosTheta *= -1;
+                }
+                particleModel.updateRotation(cosTheta, glm::vec3(0,1,0));
+                lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
+                
                 lightSourceShader.setMatrix4("mvp", pv * particleModel.m);
                 particleModel.Draw(lightSourceShader);
             }
@@ -213,7 +215,7 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false);
+        lightShader.setUniforms(stevePos+(steveHeight*0.7f), flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(lightShader);
@@ -225,11 +227,17 @@ int main() {
             steve.Draw(lightShader);
         }
         
+        for (PointLight torch : torchs) {
+            torchModel.updatePosition(torch.position-torchHeight);
+            setModelUniforms(lightShader, torchModel.m, pv, torchModel.material);
+            torchModel.Draw(lightSourceShader);
+        }
+        
         
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.use();
-        bumpShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
+        bumpShader.setUniforms(stevePos+(steveHeight*0.7f), flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(bumpShader);
@@ -243,7 +251,7 @@ int main() {
 
 		//Chunk
         chunkShader.use();
-        chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
+        chunkShader.setUniforms(stevePos+(steveHeight*0.7f), flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
         setModelUniforms(bumpShader, chunks[0]->getChunkModel(), pv, chunkMaterial);
         chunks[0]->render(chunkShader);
         
@@ -281,18 +289,18 @@ glm::mat4 getP() {
 }
 
 glm::mat4 getV(bool skybox) {
-    glm::vec3 newStevePos = stevePos;
+    glm::vec3 steveHeadPos = stevePos+steveHeight;
     if (skybox) {
-        newStevePos = glm::vec3(0,0,0);
+        steveHeadPos = glm::vec3(0,0,0);
     }
     glm::vec3 lookAt;
     glm::vec3 camPos;
     if (firstPerson) {
-        camPos = newStevePos;
+        camPos = steveHeadPos;
         lookAt = camPos+direction;
     } else {
-        camPos = newStevePos-direction;
-        lookAt = newStevePos;
+        camPos = steveHeadPos-5.0f*direction;
+        lookAt = steveHeadPos;
     }
     
     return glm::lookAt(camPos, lookAt, up); // Head is up (set to 0,-1,0 to look upside-down)
