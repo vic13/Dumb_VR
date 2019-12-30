@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/noise.hpp>
 #include <glm/gtx/string_cast.hpp> //print matrix/vertices
 
 #include "Model.hpp"
@@ -12,7 +13,21 @@
 #define CY 16
 #define CZ 16
 
+
+
+
 typedef glm::tvec4<GLbyte> byte4;
+
+static const glm::vec3 xDirPos = glm::vec3(1, 0, 0);
+static const glm::vec3 xDirNeg = glm::vec3(-1, 0, 0);
+
+static const glm::vec3 yDirPos = glm::vec3(0, 1, 0);
+static const glm::vec3 yDirNeg = glm::vec3(0, -1, 0);
+
+static const glm::vec3 zDirPos = glm::vec3(0, 0, 1);
+static const glm::vec3 zDirNeg = glm::vec3(0, 0, -1);
+
+
 
 
 struct ChunkVertex {
@@ -30,8 +45,12 @@ private:
 	int elements;
 	bool changed;
 	bool mergeVertices;
+    bool isNoised = false;
 	std::vector<ChunkVertex> vertices;
 	glm::mat4 m;
+    int ax, ay, az;
+    int biomeType;
+
 
 	ChunkVertex createVertex(GLbyte posX, GLbyte posY, GLbyte posZ, GLbyte type, float nX, float nY, float nZ) {
 		ChunkVertex vertex;
@@ -41,12 +60,42 @@ private:
 		return vertex;
 	}
 
+    int getBlockTexture(int blockType, glm::vec3 direction) {
+        if (blockType == 1) { //GRASS
+            if (direction.x == -1 || direction.z == -1 || direction.x == 1 || direction.z == 1) {
+                return 2;
+            }
+            else if (direction.y == 1) {
+                return 3;
+            }
+            else {
+                return 1;
+            }
+        }
+
+        else if (blockType == 2) { // ROCK
+            return 6;
+        }
+
+        else if (blockType == 3) { // DIRT
+            return 1;
+        }
+
+        else if (blockType == 4) { // SAND
+            return 7;
+        }
+
+        else if (blockType == 5) {  // WATER
+            return 8;
+        }
+    }
+
 	void update() {
 		changed = false;
 
 		int i = 0;
-		int xNegativeMerge[3] = { 0, 0, 0 };
-		int yNegativeMerge[3] = { 0, 0, 0 };
+		int xNegativeMerge[4] = { 0, 0, 0, 0 };
+		int yNegativeMerge[4] = { 0, 0, 0, 0 };
 
 		// View from negative x and negative y
 		for (int x = 0; x < CX; x++) {
@@ -64,24 +113,26 @@ private:
 					}
 
 					if (xVisible && block[x][y][z] == block[x][y][z - 1] && mergeVertices) {
-						vertices[xNegativeMerge[0]] = createVertex(x, y, z + 1, type, -1.0f, 0.0f, 0.0f);
-						vertices[xNegativeMerge[1]] = createVertex(x, y, z + 1, type, -1.0f, 0.0f, 0.0f); 
-						vertices[xNegativeMerge[2]] = createVertex(x, y + 1, z + 1, type, -1.0f, 0.0f, 0.0f);
+						vertices[xNegativeMerge[0]] = createVertex(x, y, z + 1, xNegativeMerge[3], -1.0f, 0.0f, 0.0f);
+						vertices[xNegativeMerge[1]] = createVertex(x, y, z + 1, xNegativeMerge[3], -1.0f, 0.0f, 0.0f);
+						vertices[xNegativeMerge[2]] = createVertex(x, y + 1, z + 1, xNegativeMerge[3], -1.0f, 0.0f, 0.0f);
 					}
 
 					else if (x > 0 && block[x - 1][y][z] == 0 || x == 0) {
-						vertices.push_back(createVertex(x, y, z, type, -1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x, y, z + 1, type, -1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x, y + 1, z, type, -1.0f, 0.0f, 0.0f));
+                        int blockTexture = getBlockTexture(type, xDirNeg);
+						vertices.push_back(createVertex(x, y, z, blockTexture, -1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x, y, z + 1, blockTexture, -1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x, y + 1, z, blockTexture, -1.0f, 0.0f, 0.0f));
 
-						vertices.push_back(createVertex(x, y + 1, z, type, -1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x, y, z + 1, type, -1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x, y + 1, z + 1, type, -1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x, y + 1, z, blockTexture, -1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x, y, z + 1, blockTexture, -1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x, y + 1, z + 1, blockTexture, -1.0f, 0.0f, 0.0f));
 
 						i += 6;
 						xNegativeMerge[0] = i - 5;
 						xNegativeMerge[1] = i - 2;
 						xNegativeMerge[2] = i - 1;
+                        xNegativeMerge[3] = blockTexture;
 						xVisible = true;
 					}
 					else {
@@ -89,12 +140,13 @@ private:
 					}
 
 					if (yVisible && block[x][y][z] == block[x][y][z - 1] && mergeVertices) {					
-						vertices[yNegativeMerge[0]] = createVertex(x, y, z + 1, type + 128, 0.0f, -1.0f, 0.0f); 
-						vertices[yNegativeMerge[1]] = createVertex(x, y, z + 1, type + 128, 0.0f, -1.0f, 0.0f);
-						vertices[yNegativeMerge[2]] = createVertex(x + 1, y, z + 1, type + 128, 0.0f, -1.0f, 0.0f);
+						vertices[yNegativeMerge[0]] = createVertex(x, y, z + 1, yNegativeMerge[3] + 128, 0.0f, -1.0f, 0.0f);
+						vertices[yNegativeMerge[1]] = createVertex(x, y, z + 1, yNegativeMerge[3] + 128, 0.0f, -1.0f, 0.0f);
+						vertices[yNegativeMerge[2]] = createVertex(x + 1, y, z + 1, yNegativeMerge[3] + 128, 0.0f, -1.0f, 0.0f);
 					}
 
 					else if (y > 0 && block[x][y - 1][z] == 0 || y == 0) {
+                        int blockTexture = getBlockTexture(type, yDirNeg);
 						vertices.push_back(createVertex(x, y, z, type + 128, 0.0f, -1.0f, 0.0f));
 						vertices.push_back(createVertex(x + 1, y, z, type + 128, 0.0f, -1.0f, 0.0f));
 						vertices.push_back(createVertex(x, y, z + 1, type + 128, 0.0f, -1.0f, 0.0f));
@@ -107,6 +159,7 @@ private:
 						yNegativeMerge[0] = i - 4;
 						yNegativeMerge[1] = i - 3;
 						yNegativeMerge[2] = i - 1;
+                        yNegativeMerge[3] = blockTexture;
 
 						yVisible = true;
 					}
@@ -118,8 +171,8 @@ private:
 		}
 
 
-		int xPositiveMerge[3] = { 0, 0, 0 };
-		int yPositiveMerge[3] = { 0, 0, 0 };
+		int xPositiveMerge[4] = { 0, 0, 0, 0};
+		int yPositiveMerge[4] = { 0, 0, 0, 0};
 		// View from positive x and positive y
 		for (int x = CX - 1; x >= 0; x--) {
 			for (int y = CY - 1; y >= 0; y--) {
@@ -135,24 +188,26 @@ private:
 					}
 
 					if (xVisible && block[x][y][z] == block[x][y][z + 1] && mergeVertices) {
-						vertices[xPositiveMerge[0]] = createVertex(x + 1, y + 1, z, type, 1.0f, 0.0f, 0.0f);
-						vertices[xPositiveMerge[1]] = createVertex(x + 1, y + 1, z, type, 1.0f, 0.0f, 0.0f);
-						vertices[xPositiveMerge[2]] = createVertex(x + 1, y, z, type, 1.0f, 0.0f, 0.0f);
+						vertices[xPositiveMerge[0]] = createVertex(x + 1, y + 1, z, xPositiveMerge[3], 1.0f, 0.0f, 0.0f);
+						vertices[xPositiveMerge[1]] = createVertex(x + 1, y + 1, z, xPositiveMerge[3], 1.0f, 0.0f, 0.0f);
+						vertices[xPositiveMerge[2]] = createVertex(x + 1, y, z, xPositiveMerge[3], 1.0f, 0.0f, 0.0f);
 					}
 
-					else if (x < CX - 2 && block[x + 1][y][z] == 0 || x == CX - 1) {
-						vertices.push_back(createVertex(x + 1, y + 1, z, type, 1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z + 1, type, 1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y, z + 1, type, 1.0f, 0.0f, 0.0f));
+					else if (x <= CX - 2 && block[x + 1][y][z] == 0 || x == CX - 1) {
+                        int blockTexture = getBlockTexture(type, xDirPos);
+						vertices.push_back(createVertex(x + 1, y + 1, z, blockTexture, 1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z + 1, blockTexture, 1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y, z + 1, blockTexture, 1.0f, 0.0f, 0.0f));
 
-						vertices.push_back(createVertex(x + 1, y, z, type, 1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z, type, 1.0f, 0.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y, z + 1, type, 1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y, z, blockTexture, 1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z, blockTexture, 1.0f, 0.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y, z + 1, blockTexture, 1.0f, 0.0f, 0.0f));
 
 						i += 6;
 						xPositiveMerge[0] = i - 6;
 						xPositiveMerge[1] = i - 2;
 						xPositiveMerge[2] = i - 3;
+                        xPositiveMerge[3] = blockTexture;
 						xVisible = true;
 					}
 					else {
@@ -161,24 +216,26 @@ private:
 
 
 					if (yVisible && block[x][y][z] == block[x][y][z + 1] && mergeVertices) {
-						vertices[yPositiveMerge[0]] = createVertex(x + 1, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f);  
-						vertices[yPositiveMerge[1]] = createVertex(x + 1, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f); 
-						vertices[yPositiveMerge[2]] = createVertex(x, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f);
+						vertices[yPositiveMerge[0]] = createVertex(x + 1, y + 1, z, yPositiveMerge[3] + 128, 0.0f, 1.0f, 0.0f);
+						vertices[yPositiveMerge[1]] = createVertex(x + 1, y + 1, z, yPositiveMerge[3] + 128, 0.0f, 1.0f, 0.0f);
+						vertices[yPositiveMerge[2]] = createVertex(x, y + 1, z, yPositiveMerge[3] + 128, 0.0f, 1.0f, 0.0f);
 					}
 
-					else if (y < CY - 2 && block[x][y + 1][z] == 0 || y == CY - 1) {
-						vertices.push_back(createVertex(x, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f));
-						vertices.push_back(createVertex(x, y + 1, z + 1, 3 + 128, 0.0f, 1.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f));
+					else if (y <= CY - 2 && block[x][y + 1][z] == 0 || y == CY - 1) {
+                        int blockTexture = getBlockTexture(type, yDirPos);
+						vertices.push_back(createVertex(x, y + 1, z, blockTexture + 128, 0.0f, 1.0f, 0.0f));
+						vertices.push_back(createVertex(x, y + 1, z + 1, blockTexture + 128, 0.0f, 1.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z, blockTexture + 128, 0.0f, 1.0f, 0.0f));
 
-						vertices.push_back(createVertex(x, y + 1, z + 1, 3 + 128, 0.0f, 1.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z + 1, 3 + 128, 0.0f, 1.0f, 0.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z, 3 + 128, 0.0f, 1.0f, 0.0f));
+						vertices.push_back(createVertex(x, y + 1, z + 1, blockTexture + 128, 0.0f, 1.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z + 1, blockTexture + 128, 0.0f, 1.0f, 0.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z, blockTexture + 128, 0.0f, 1.0f, 0.0f));
 
 						i += 6;
 						yPositiveMerge[0] = i - 4;
 						yPositiveMerge[1] = i - 1;
 						yPositiveMerge[2] = i - 6;
+                        yPositiveMerge[3] = blockTexture;
 						yVisible = true;
 					}
 					else {
@@ -192,6 +249,7 @@ private:
 		for (int x = 0; x < CX; x++) {
 			for (int z = 0; z < CZ; z++) {
 				bool visible = false;
+                int blockTexture;
 				for (int y = 0; y < CY; y++) {
 					uint8_t type = block[x][y][z];
 
@@ -201,19 +259,20 @@ private:
 					}
 
 					else if (visible && block[x][y - 1][z] == block[x][y][z] && mergeVertices) {
-						vertices[i - 5] = createVertex(x, y + 1, z, type, 0.0f, 0.0f, -1.0f);
-						vertices[i - 3] = createVertex(x, y + 1, z, type, 0.0f, 0.0f, -1.0f);
-						vertices[i - 2] = createVertex(x + 1, y + 1, z, type, 0.0f, 0.0f, -1.0f);
+						vertices[i - 5] = createVertex(x, y + 1, z, blockTexture, 0.0f, 0.0f, -1.0f);
+						vertices[i - 3] = createVertex(x, y + 1, z, blockTexture, 0.0f, 0.0f, -1.0f);
+						vertices[i - 2] = createVertex(x + 1, y + 1, z, blockTexture, 0.0f, 0.0f, -1.0f);
 					}
 
 					else if (z > 0 && !block[x][y][z - 1] || z == 0) {
-						vertices.push_back(createVertex(x, y, z, type, 0.0f, 0.0f, -1.0f));
-						vertices.push_back(createVertex(x, y + 1, z, type, 0.0f, 0.0f, -1.0f));
-						vertices.push_back(createVertex(x + 1, y, z, type, 0.0f, 0.0f, -1.0f));
+                        blockTexture = getBlockTexture(type, zDirNeg);
+						vertices.push_back(createVertex(x, y, z, blockTexture, 0.0f, 0.0f, -1.0f));
+						vertices.push_back(createVertex(x, y + 1, z, blockTexture, 0.0f, 0.0f, -1.0f));
+						vertices.push_back(createVertex(x + 1, y, z, blockTexture, 0.0f, 0.0f, -1.0f));
 
-						vertices.push_back(createVertex(x, y + 1, z, type, 0.0f, 0.0f, -1.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z, type, 0.0f, 0.0f, -1.0f));
-						vertices.push_back(createVertex(x + 1, y, z, type, 0.0f, 0.0f, -1.0f));
+						vertices.push_back(createVertex(x, y + 1, z, blockTexture, 0.0f, 0.0f, -1.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z, blockTexture, 0.0f, 0.0f, -1.0f));
+						vertices.push_back(createVertex(x + 1, y, z, blockTexture, 0.0f, 0.0f, -1.0f));
 
 						i += 6;
 						visible = true;
@@ -231,6 +290,7 @@ private:
 		for (int x = CX - 1; x >= 0; x--) {
 			for (int z = CZ - 1; z >= 0; z--) {
 				bool visible = false;
+                int blockTexture;
 				for (int y = CY - 1; y >= 0; y--) {
 					uint8_t type = block[x][y][z];
 
@@ -240,19 +300,20 @@ private:
 					}
 
 					else if (visible && block[x][y + 1][z] == block[x][y][z] && mergeVertices) {
-						vertices[i - 6] = createVertex(x, y, z + 1, type, 0.0f, 0.0f, 1.0f);
-						vertices[i - 5] = createVertex(x + 1, y, z + 1, type, 0.0f, 0.0f, 1.0f);
-						vertices[i - 2] = createVertex(x + 1, y, z + 1, type, 0.0f, 0.0f, 1.0f);
+						vertices[i - 6] = createVertex(x, y, z + 1, blockTexture, 0.0f, 0.0f, 1.0f);
+						vertices[i - 5] = createVertex(x + 1, y, z + 1, blockTexture, 0.0f, 0.0f, 1.0f);
+						vertices[i - 2] = createVertex(x + 1, y, z + 1, blockTexture, 0.0f, 0.0f, 1.0f);
 					}
 
-					else if (z < CZ - 2 && block[x][y][z + 1] == 0 || z == CZ - 1) {
-						vertices.push_back(createVertex(x, y, z + 1, type, 0.0f, 0.0f, 1.0f));
-						vertices.push_back(createVertex(x + 1, y, z + 1, type, 0.0f, 0.0f, 1.0f));
-						vertices.push_back(createVertex(x, y + 1, z + 1, type, 0.0f, 0.0f, 1.0f));
+					else if (z <= CZ - 2 && block[x][y][z + 1] == 0 || z == CZ - 1) {
+                        blockTexture = getBlockTexture(type, zDirPos);
+						vertices.push_back(createVertex(x, y, z + 1, blockTexture, 0.0f, 0.0f, 1.0f));
+						vertices.push_back(createVertex(x + 1, y, z + 1, blockTexture, 0.0f, 0.0f, 1.0f));
+						vertices.push_back(createVertex(x, y + 1, z + 1, blockTexture, 0.0f, 0.0f, 1.0f));
 
-						vertices.push_back(createVertex(x, y + 1, z + 1, type, 0.0f, 0.0f, 1.0f));
-						vertices.push_back(createVertex(x + 1, y, z + 1, type, 0.0f, 0.0f, 1.0f));
-						vertices.push_back(createVertex(x + 1, y + 1, z + 1, type, 0.0f, 0.0f, 1.0f));
+						vertices.push_back(createVertex(x, y + 1, z + 1, blockTexture, 0.0f, 0.0f, 1.0f));
+						vertices.push_back(createVertex(x + 1, y, z + 1, blockTexture, 0.0f, 0.0f, 1.0f));
+						vertices.push_back(createVertex(x + 1, y + 1, z + 1, blockTexture, 0.0f, 0.0f, 1.0f));
 
 						i += 6;
 						visible = true;
@@ -292,29 +353,137 @@ private:
 		glBindVertexArray(0);
 	}
 
+    static float create2DNoise(int numIterations, int x, int y, int seed, float persistence, float scale, float low, float high) {
+        float maxAmp = 0;
+        float amp = 1.0;
+        float freq = scale;
+        float noise = 0;
+
+        for (int i = 0; i < numIterations; i++) {
+            noise += glm::simplex(glm::vec2(x + seed, y + seed) * freq) * amp ;
+            maxAmp += amp;
+            amp *= persistence;
+            freq *= 2;
+        }
+
+        noise /= maxAmp;
+
+        noise = noise * (high - low) / 2 + (high + low) / 2;
+
+        return noise;
+    }
+
+    static int create3DNoise(int numIterations, int x, int y, int z, int seed, float persistence, float scale, float low, float high) {
+        float maxAmp = 0;
+        float amp = 1.0;
+        float freq = scale;
+        float noise = 0;
+
+        for (int i = 0; i < numIterations; i++) {
+            noise += glm::simplex(glm::vec3(x + seed, y + seed, z + seed) * freq) * amp;
+            maxAmp += amp;
+            amp *= persistence;
+            freq *= 2;
+        }
+
+        noise /= maxAmp;
+
+        int noiseFloor = std::floor(noise * (high - low) / 2 + (high + low) / 2);
+
+        return noiseFloor;
+
+    }
+
+    void noise(int seed) {
+        float SEALEVEL = 5.0;
+        //int seed = 1;
+        biomeType = create2DNoise(5, ax, az, 5000, 0.1, 0.005, 1.0, 4.0); //rand() % 3 + 1;
+
+
+        if (isNoised)
+            return;
+        else
+            isNoised = true;
+
+        for (int x = 0; x < CX; x++) {
+            for (int z = 0; z < CZ; z++) {
+                // Land height
+                float n;
+                int h;
+
+                if (biomeType == 1) {
+                    n = create2DNoise(5, x + ax, z + az, 1, 0.4, 0.005, SEALEVEL/2, 6.0);
+                    h = n * 2;
+                    for (int y = 0; y < h; y++) {
+                        block[x][y][z] = create3DNoise(5, x + ax, y + ay, z + az, 45, 0.01, 0.0005, 1.0, 2.9);
+                    }
+                    block[x][h][z] = 1;
+                }
+
+                else if (biomeType == 2) {
+                    n = create2DNoise(5, x + ax, z + az, 1, 2, 0.005, SEALEVEL/2, 8.0);
+                    h = n * 2;
+                    for (int y = 0; y <= h; y++) {
+                        block[x][y][z] = create3DNoise(5, x + ax, y + ay, z + az, 45, 0.1, 0.05, 1.0, 3.9);
+                    }
+                }
+
+                else {
+                    n = create2DNoise(5, x + ax, z + az, 1, 0.1, 0.005, 0.0, 5.0);
+                    h = n * 2;
+                    for (int y = 0; y <= h; y++) {
+                        block[x][y][z] = 4;
+                    }
+                }
+
+
+                if (h < SEALEVEL && biomeType == 3) {
+                    for (int y = SEALEVEL - h; y <= SEALEVEL; y++) {
+                        block[x][y][z] = 5;
+                    }
+                }
+
+            }
+        }
+
+        changed = true;
+    }
+
+
 
 
 public:
 	Chunk(float x, float y, float z, float scale, bool mergeVertices=true) {
-		memset(block, 2, sizeof(block));
+		memset(block, 0, sizeof(block)); // set all blocks to dirt by default
 		this->mergeVertices = mergeVertices;
 		elements = 0;
 		changed = true;
         this->texture = createTexture("chunk.png", true);
 		this->m = Model::getM(x, y, z, scale);
+        ax = x;
+        ay = y;
+        az = z;
+        noise(1000);
 	}
 
 	~Chunk() {
 		glDeleteBuffers(1, &vbo);
 	}
 
-	unsigned char getBlock(int x, int y, int z) {
-		return block[x][y][z];
+	uint8_t getBlock(int x, int y, int z) {
+        if (0 <= x < CX && 0 <= y < CY && 0 <= z < CZ) {
+            return block[x][y][z];
+        }
+        else {
+            return 0;
+        }
 	}
 
 	void setBlock(int x, int y, int z, unsigned char blockType) {
-		block[x][y][z] = blockType;
-		changed = true;
+        if (0 <= x < CX && 0 <= y < CY && 0 <= z < CZ) {
+            block[x][y][z] = blockType;
+            changed = true;
+        }
 	}
 
 	glm::mat4 getChunkModel() {
