@@ -104,7 +104,7 @@ int main() {
     Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.8, {0.4, 0.5, 0.1, 5});
 
     Material chunkMaterial = {0.3, 0.3, 0.3, 5};
-    World world = World(30, chunkShader);  // Change Map Size here
+    World world = World(5, chunkShader);  // Change Map Size here
     
     GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
     
@@ -136,6 +136,7 @@ int main() {
         updateStevePosition();
         updateCameraRotation();
         updateFlashLight();
+        glm::vec3 flashlightPos = stevePos+(steveHeight*0.7f);
         if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
                 glm::vec3 position = stevePos+steveHeight+2.0f*direction+torchHeight;
@@ -209,7 +210,7 @@ int main() {
         // Models with lighting
         cube.updateRotation(timeValue, glm::vec3(1, 0, 0));
         lightShader.use();
-        lightShader.setUniforms(stevePos+(steveHeight*0.7f), flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false);
+        lightShader.setUniforms(flashlightPos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false);
         for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(lightShader);
@@ -231,7 +232,7 @@ int main() {
         // Bump map
         bumpCube.updateRotation(timeValue, glm::vec3(1, 1, 1));
         bumpShader.use();
-        bumpShader.setUniforms(stevePos+(steveHeight*0.7f), flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
+        bumpShader.setUniforms(flashlightPos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, true);
         for (Model* modelPointer : bumpShaderModels) {
             setModelUniforms(bumpShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(bumpShader);
@@ -245,7 +246,7 @@ int main() {
 
 		//Chunk
         chunkShader.use();
-        chunkShader.setUniforms(stevePos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
+        chunkShader.setUniforms(flashlightPos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
         world.render(pv, chunkMaterial);
 
         // Flip Buffers and Draw
