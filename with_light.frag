@@ -11,11 +11,17 @@ struct PointLight {
     vec3 L;
     vec3 color;
 };
+struct Material {
+    float ka;
+    float kd;
+    float ks;
+    float ns;
+};
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_normal1;
 uniform sampler2D texture_flashlight;
-uniform float ns;
+uniform Material material;
 uniform vec3 pointlightColors[NR_POINT_LIGHTS];
 uniform bool bump_mapping;
 uniform bool chunk; // True if we are dealing with a Chunk
@@ -108,9 +114,6 @@ vec2 getFlashlightUV(float r, float phi) {
 }
 
 vec3 getLightColor(vec3 L_norm, vec3 lightColor, float lightDistance) {
-    float ka = 0.3;
-    float kd = 0.4;
-    float ks = 0.3;
     
     // Ambient
     float ambient_strength = 1;
@@ -125,10 +128,10 @@ vec3 getLightColor(vec3 L_norm, vec3 lightColor, float lightDistance) {
         vec3 R = 2*cosTheta*N_norm - L_norm;
         cosPhi = dot(normalize(R), V_norm);
     }
-    float specular_strength = pow(clamp(cosPhi, 0, 1), ns);
+    float specular_strength = pow(clamp(cosPhi, 0, 1), material.ns);
 
     // Total
-    float total_strength = ka*ambient_strength + kd*diffuse_strength + ks*specular_strength;
+    float total_strength = material.ka*ambient_strength + material.kd*diffuse_strength + material.ks*specular_strength;
     float attenuation = 1.0/(1.0+0.5*lightDistance);
     
     return total_strength * lightColor * attenuation;

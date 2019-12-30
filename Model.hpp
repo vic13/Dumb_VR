@@ -44,20 +44,21 @@ public:
     float z;
     float scale;
     glm::vec3 color = glm::vec3(0.0);
+    Material material;
 
     /*  Functions   */
     // Constructor, expects a filepath to a 3D model.
-    Model(const char* name, bool normal, float x, float y, float z, float scale, float ns = 0, bool tangent = false, bool alpha = true)
+    Model(const char* name, bool normal, glm::vec3 position, float scale, Material material = {}, bool tangent = false, bool alpha = true)
     {
         this->normal = normal;
         this->tangent = tangent;
         this->alpha = alpha;
-        this->x = x;
-        this->y = y;
-        this->z = z;
+        this->x = position.x;
+        this->y = position.y;
+        this->z = position.z;
         this->scale = scale;
         this->m = getM(x, y, z, scale);
-        this->ns = ns;
+        this->material = material;
 		this->name = name;
         this->loadModel(getObjPath(name));
     }
