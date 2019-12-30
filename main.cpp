@@ -77,15 +77,15 @@ int main() {
     glm::mat4 p = getP();
     
     // Models
-    Model donut = Model("donut", true, glm::vec3(15, 0, 0), 50, {0.3, 0.6, 0, 5});
-    Model cube = Model("cube", true, glm::vec3(15, 0, -15), 2, {0.3, 0.3, 0.4, 20});
-    Model sphere = Model("smoothSphere", true, glm::vec3(30, 0, 0), 40, {0.3, 0.3, 0.4, 20});
+    Model donut = Model("donut", true, glm::vec3(15, 0, -15), 50, {0.3, 0.6, 0, 5});
+    Model cube = Model("cube", true, glm::vec3(15, 0, -30), 2, {0.3, 0.3, 0.4, 20});
+    Model sphere = Model("smoothSphere", true, glm::vec3(30, 0, -15), 40, {0.3, 0.3, 0.4, 20});
     lightShaderModels.push_back(&donut);
     lightShaderModels.push_back(&cube);
     lightShaderModels.push_back(&sphere);
     
-    Model bumpCube = Model("bump_cube", true, glm::vec3(30, 0, -15), 5, {0.3, 0.4, 0.3, 5}, true, false);
-    Model bumpCube2 = Model("bump_cube", true, glm::vec3(45, 0, 0), 5, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube = Model("bump_cube", true, glm::vec3(30, 0, -30), 5, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube2 = Model("bump_cube", true, glm::vec3(45, 0, -15), 5, {0.3, 0.4, 0.3, 5}, true, false);
     bumpShaderModels.push_back(&bumpCube);
     bumpShaderModels.push_back(&bumpCube2);
     

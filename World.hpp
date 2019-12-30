@@ -10,7 +10,6 @@ private:
     GLuint texture;
     Shader* chunkShader;
     Chunk* worldChunks[SCX][SCY][SCZ];
-    Chunk* renderChunks[30];
     float chunkScale = 1.0f;
 
 
@@ -47,7 +46,7 @@ private:
     }
 
 public:
-    World(int defaultSize, Shader chunkShader) {
+    World(int defaultSize, Shader& chunkShader) {
         this->defaultSize = defaultSize;
         this->texture = createTexture("chunk.png", true);
         this->chunkShader = &chunkShader;
