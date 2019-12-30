@@ -22,6 +22,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <time.h>
 
 // Def
 using std::cout;
@@ -106,7 +107,7 @@ int main() {
     Material chunkMaterial = {0.3, 0.3, 0.3, 5};
     World world = World(5, chunkShader);  // Change Map Size here
     
-    GLuint flashlight_tex = createTexture("VR_Assets/flashlight.png", true);
+    GLuint flashlight_tex = createTexture("VR_Assets/Textures/flashlight.png", true);
     
     std::vector<PointLight> torchs;
     std::vector<ParticleSource> particleSources;
