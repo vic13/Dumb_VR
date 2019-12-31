@@ -1,5 +1,6 @@
 
 #include <vector>
+#include <chrono> 
 
 struct Particle {
     glm::vec3 position;
@@ -31,6 +32,8 @@ public:
     }
     
     void updateParticles() {
+        auto start = std::chrono::high_resolution_clock::now();
+
         // Gen new particles
         for (int i=0; i<nbParticleGen; i++) {
             Particle p;
@@ -39,6 +42,8 @@ public:
             p.ttl = this->initTTL;
             this->particles.push_back(p);
         }
+
+        auto middle = std::chrono::high_resolution_clock::now();
         
         // Update particles
         for (unsigned int i=0; i<this->particles.size(); i++) {
@@ -53,6 +58,11 @@ public:
                 p->ttl = p->ttl - 1;
             }
         }
+
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto durationTotal = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        auto durationMiddle = std::chrono::duration_cast<std::chrono::microseconds>(middle - start);
+        std::cout << "elapsed time total: " <<  durationTotal.count() << " middle: " << durationMiddle.count() << std::endl;
     }
     
 private:
