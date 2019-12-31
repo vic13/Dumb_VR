@@ -186,12 +186,11 @@ int main() {
         for (unsigned int i = 0; i<particleSources.size(); i++) {
             particleSources[i].updateParticles();
             for (Particle p : particleSources[i].getParticles()) {
-                particleModel.updatePosition(p.position);
-                float cosTheta = glm::acos(glm::dot(planeDirection, glm::vec3(1,0,0)));
+                float theta = glm::acos(glm::dot(planeDirection, glm::vec3(1,0,0)));
                 if (planeDirection.z > 0) {
-                    cosTheta *= -1;
+                    theta *= -1;
                 }
-                particleModel.updateRotation(cosTheta, glm::vec3(0,1,0));
+                particleModel.updateM(p.position, theta, glm::vec3(0,1,0));
                 lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
                 
                 lightSourceShader.setMatrix4("mvp", pv * particleModel.m);

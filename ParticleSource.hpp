@@ -62,7 +62,7 @@ public:
         auto stop = std::chrono::high_resolution_clock::now();
         auto durationTotal = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
         auto durationMiddle = std::chrono::duration_cast<std::chrono::microseconds>(middle - start);
-        std::cout << "elapsed time total: " <<  durationTotal.count() << " middle: " << durationMiddle.count() << std::endl;
+        //std::cout << "elapsed time total: " <<  durationTotal.count() << " middle: " << durationMiddle.count() << std::endl;
     }
     
 private:

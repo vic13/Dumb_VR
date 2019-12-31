@@ -80,6 +80,10 @@ public:
     void updateRotation(float rotationAngle, glm::vec3 rotationAxis) {
         this->m = getM(this->x, this->y, this->z, this->scale, rotationAngle, rotationAxis);
     }
+    
+    void updateM(glm::vec3 position, float rotationAngle, glm::vec3 rotationAxis) {
+        this->m = getM(position.x, position.y, position.z, this->scale, rotationAngle, rotationAxis);
+    }
 
 	static glm::mat4 getM(float x, float y, float z, float scale, float rotationAngle=0, glm::vec3 rotationAxis = glm::vec3(1, 0, 0)) {
         glm::mat4 rotation = glm::rotate(glm::mat4(1), rotationAngle, rotationAxis);
