@@ -42,14 +42,15 @@ public:
         
         // Update particles
         for (unsigned int i=0; i<this->particles.size(); i++) {
-            this->particles[i].position += particleSpeed*this->particles[i].direction;
-            this->particles[i].direction = glm::normalize((1.0f-upSpeed)*this->particles[i].direction + upSpeed*glm::vec3(0.0f,1.0f,0.0f));
-            float lifeRatio = ((this->initTTL-this->particles[i].ttl)/(float)this->initTTL);
-            this->particles[i].color = lifeRatio*endColor + (1-lifeRatio)*initColor;
-            if (this->particles[i].ttl == 0) {
+            Particle* p = &(this->particles[i]);
+            p->position += particleSpeed*p->direction;
+            p->direction = glm::normalize((1.0f-upSpeed)*p->direction + upSpeed*glm::vec3(0.0f,1.0f,0.0f));
+            float lifeRatio = ((this->initTTL-p->ttl)/(float)this->initTTL);
+            p->color = lifeRatio*endColor + (1-lifeRatio)*initColor;
+            if (p->ttl == 0) {
                 this->particles.erase(this->particles.begin());
             } else {
-                this->particles[i].ttl = this->particles[i].ttl - 1;
+                p->ttl = p->ttl - 1;
             }
         }
     }
