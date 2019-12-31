@@ -12,9 +12,9 @@ struct Particle {
 class ParticleSource {
 public:
     int nbParticleGen = 1;
-    float particleSpeed = 0.01;
+    float particleSpeed = 0.02;
     float upSpeed = 0.1;
-    int initTTL = 2*60;
+    int initTTL = 60;
     glm::vec3 initColor;
     glm::vec3 endColor;
     glm::vec3 position;
