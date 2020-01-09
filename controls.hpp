@@ -25,7 +25,7 @@ bool pause = false;
 bool cameraLock = false;
 
 float g = 0.3;
-bool falling = false;
+bool fallingEnabled = false;
 float fallingT = 0;
 
 float flashlightLatency = 0.9;
@@ -93,14 +93,14 @@ void updateStevePosition() {
     
     if (keysPressed[GLFW_KEY_F]) {
         keysPressed[GLFW_KEY_F] = false;
-        if (falling) {
-            falling = false;
+        if (fallingEnabled) {
+            fallingEnabled = false;
         } else {
-            falling = true;
+            fallingEnabled = true;
             fallingT = glfwGetTime();
         }
     }
-    if (!falling) {
+    if (!fallingEnabled) {
         if (keys[GLFW_KEY_SPACE] && steveMoveDirections[2]) {
             stevePos+=speed*glm::vec3(0,1,0);
         }
@@ -111,14 +111,8 @@ void updateStevePosition() {
         if (steveMoveDirections[3]) {
             float t = glfwGetTime() - fallingT;
             float v = g * t;
-            if (v > 0.2) {
-                v = 0.2;
-            }
             stevePos -= v * glm::vec3(0, 1, 0);
-
-        }
-        else {
-            //falling = false;
+            //std::cout << v << std::endl;
         }
     }
 }

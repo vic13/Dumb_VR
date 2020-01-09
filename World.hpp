@@ -6,7 +6,7 @@
 
 static const glm::vec4 chunkMiddle = glm::vec4(CX / 2, CY / 2, CZ / 2, 1);
 static const int drawingDistance = 2;
-static const int yWorldTranslation;
+static const int yWorldTranslation = 2;
 
 
 class World {
@@ -210,8 +210,8 @@ public:
 
                     if (i * CX <= steveChunkCoordinates.x && (i + 1) * CX > steveChunkCoordinates.x && j * CZ <= steveChunkCoordinates.z && (j+1) * CZ > steveChunkCoordinates.z) {
                         glm::ivec4 steveRelCoords = getSteveChunkPosition(steveChunkCoordinates, steveWorldCoordinates);
-                        std::cout << "Chunk" << i << ", " << j << std::endl;
-                        std::cout << steveRelCoords.x << ", " << steveRelCoords.z << std::endl;
+                        //std::cout << "Chunk" << i << ", " << j << std::endl;
+                        //std::cout << steveRelCoords.x << ", " << steveRelCoords.z << std::endl;
                         int blockHeight = worldChunks[i - steveRelCoords.y][0][j - steveRelCoords.w]->getHeight(steveRelCoords.x, steveRelCoords.z) + yWorldTranslation;
 
                         if (steveWorldCoordinates.y - 1 < blockHeight && steveMoveDirections[3]) {
@@ -219,6 +219,7 @@ public:
                             steveMoveDirections[3] = 0;
                         }
                         else if (steveWorldCoordinates.y - 1 > blockHeight && !steveMoveDirections[3]){
+                            fallingT = glfwGetTime();
                             steveMoveDirections[3] = 1;
                         }
                         else if (steveWorldCoordinates.y - 1 < blockHeight) {
