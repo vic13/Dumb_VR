@@ -102,7 +102,7 @@ int main() {
     
     Model particleModel = Model("particle", false, glm::vec3(3, 0, 1), 0.02);
     
-    Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.8, {0.4, 0.5, 0.1, 5});
+    Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.7, {0.4, 0.5, 0.1, 5});
 
     Material chunkMaterial = {0.3, 0.3, 0.3, 5};
     World world = World(5, chunkShader);  // Change Map Size here
@@ -135,6 +135,7 @@ int main() {
         // Update camera + v
         updateFirstPerson();
         updateStevePosition();
+        updateCameraLock();
         updateCameraRotation();
         updateFlashLight();
         glm::vec3 flashlightPos = stevePos+(steveHeight*0.7f);
@@ -183,16 +184,32 @@ int main() {
             lightSourceShader.setVector3f("lightColor", 2*modelPointer->color.x, 2*modelPointer->color.y, 2*modelPointer->color.z);
             modelPointer->Draw(lightSourceShader);
         }
+        //for (std::vector<ParticleSource>::iterator it = particleSources.begin(); it != particleSources.end(); ++it) {
+        //    it->updateParticles();
+        //    for (Particle p : it->getParticles()) {
+        //        float theta = glm::acos(glm::dot(planeDirection, glm::vec3(1, 0, 0)));
+        //        if (planeDirection.z > 0) {
+        //            theta *= -1;
+        //        }
+        //        particleModel.updateM(p.position, theta, glm::vec3(0, 1, 0));
+        //        lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
+
+        //        lightSourceShader.setMatrix4("mvp", pv * particleModel.m);
+        //        particleModel.Draw(lightSourceShader);
+        //    }
+        //}
+
+
         for (unsigned int i = 0; i<particleSources.size(); i++) {
             particleSources[i].updateParticles();
             for (Particle p : particleSources[i].getParticles()) {
-                float theta = glm::acos(glm::dot(planeDirection, glm::vec3(1,0,0)));
+                GLfloat dotResult = glm::dot(planeDirection, xDirection);
+                float theta = glm::acos(dotResult);
                 if (planeDirection.z > 0) {
                     theta *= -1;
                 }
-                particleModel.updateM(p.position, theta, glm::vec3(0,1,0));
+                particleModel.updateM(p.position, theta, yDirection);
                 lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
-                
                 lightSourceShader.setMatrix4("mvp", pv * particleModel.m);
                 particleModel.Draw(lightSourceShader);
             }
@@ -214,12 +231,6 @@ int main() {
         for (Model* modelPointer : lightShaderModels) {
             setModelUniforms(lightShader, modelPointer->m, pv, modelPointer->material);
             modelPointer->Draw(lightShader);
-        }
-
-        steve.updatePosition(stevePos);
-        if (!firstPerson) {
-            setModelUniforms(lightShader, steve.m, pv, steve.material);
-            steve.Draw(lightShader);
         }
         
         for (PointLight torch : torchs) {
@@ -244,10 +255,18 @@ int main() {
         skyboxShader.setMatrix4("mvp", p * getV(true) * skybox.m);
         skybox.Draw(skyboxShader);
 
+
 		//Chunk
         chunkShader.use();
         chunkShader.setUniforms(flashlightPos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
-        world.render(pv, chunkMaterial);
+        world.render(pv, chunkMaterial, steve.m * glm::vec4(0, 0, 0, 1), steveHeight);
+
+
+        steve.updateM(stevePos, steveRotation, glm::vec3(0, 1, 0));
+        if (!firstPerson) {
+            setModelUniforms(lightShader, steve.m, pv, steve.material);
+            steve.Draw(lightShader);
+        }
 
         // Flip Buffers and Draw
         glfwSwapBuffers(mWindow);

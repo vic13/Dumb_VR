@@ -2,6 +2,7 @@
 
 #include <cmath>      // fmod
 
+
 #ifndef M_PI  // M_PI windows definition
 namespace
 {
@@ -17,3 +18,9 @@ namespace
 #define CX 16
 #define CY 16
 #define CZ 16
+
+
+
+static const glm::vec3 xDirection = glm::vec3(1, 0, 0);
+static const glm::vec3 yDirection = glm::vec3(0, 1, 0);
+

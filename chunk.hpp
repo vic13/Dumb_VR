@@ -50,7 +50,6 @@ private:
     int biomeType;
     Chunk *negX, *negZ, *posX, *posZ;
 
-
 	ChunkVertex createVertex(GLbyte posX, GLbyte posY, GLbyte posZ, GLbyte type, float nX, float nY, float nZ) {
 		ChunkVertex vertex;
 		vertex.Position = byte4(posX, posY, posZ, type);
@@ -382,7 +381,11 @@ private:
     }
 
 
+
 public:
+    glm::vec4 chunkCenter;
+
+
     Chunk(float x, float y, float z, float scale, bool isNoised = false, bool mergeVertices = true) {
 		memset(block, 0, sizeof(block)); // set all blocks to dirt by default
 		this->mergeVertices = mergeVertices;
@@ -391,6 +394,7 @@ public:
         this->chunkX = x;
         this->chunkY = y;
         this->chunkZ = z;
+        this->chunkCenter = glm::vec4(x + CX / 2, y + CY / 2, z + CZ / 2, 1);
         elements = 0;
         changed = true;
         noise(5000);
@@ -423,13 +427,21 @@ public:
         return this->block[x][y][z];
 	}
 
-
-	void setBlock(int x, int y, int z, uint8_t blockType) {
-        if (0 <= x < CX && 0 <= y < CY && 0 <= z < CZ) { // fix
-            this->block[x][y][z] = blockType;
-            changed = true;
+    int getHeight(int x, int z) {
+        for (int i = CY - 1; i >= 0; i--) {
+            if (this->block[x][i][z]) {
+                return i;
+            }
         }
-	}
+        return 0;
+    }
+
+	//void setBlock(int x, int y, int z, uint8_t blockType) {
+ //       if (0 <= x < CX && 0 <= y < CY && 0 <= z < CZ) { // fix
+ //           this->block[x][y][z] = blockType;
+ //           changed = true;
+ //       }
+	//}
 
 	glm::mat4 getChunkModel() {
 		return this->m;
