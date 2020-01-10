@@ -259,7 +259,7 @@ int main() {
 		//Chunk
         chunkShader.use();
         chunkShader.setUniforms(flashlightPos, flashlightDirection, right, camPos, flashlightOn, flashlight_tex, torchs, directionalLightL, directionalLightColor, false, true);
-        world.render(pv, chunkMaterial, steve.m * glm::vec4(0, 0, 0, 1), steveHeight);
+        world.render(pv, chunkMaterial, steve.m, steveHeight);
 
 
         steve.updateM(stevePos, steveRotation, glm::vec3(0, 1, 0));
