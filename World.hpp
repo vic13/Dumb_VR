@@ -392,7 +392,7 @@ public:
 
                 
 
-                if (coords.z < -16 && !(steveLastDir.y < 0)) {  // When steve is falling the z value may become very weird
+                if (coords.z < -16) {  // When steve is falling the z value may become very weird
                     continue;
                 }
 
