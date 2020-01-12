@@ -141,7 +141,8 @@ int main() {
         glm::vec3 flashlightPos = stevePos+(steveHeight*0.7f);
         if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
-                glm::vec3 position = stevePos+steveHeight+2.0f*cameraDirection+torchHeight;
+                glm::vec3 position = world.getSelectedBlockWorldCoords();//stevePos+steveHeight+2.0f*cameraDirection+torchHeight;
+                position += glm::vec3(0.5,1,0.5);
                 PointLight l = {position, torchColor};
                 torchs.push_back(l);
                 ParticleSource ps = ParticleSource(position, torchColor, glm::vec3(0.5f, 0.5f, 0.5f));
