@@ -28,6 +28,9 @@ uniform bool chunk; // True if we are dealing with a Chunk
 uniform Flashlight flashlight;
 uniform vec3 directional_color;
 uniform vec3 right;
+uniform bool validSelectedBlock;
+uniform vec4 blockSelected;
+
 
 in VS_OUT {
     vec2 uv;
@@ -75,6 +78,15 @@ void main() {
     // Flashlight
     if (flashlight.on) {
         lightColor += getFlashlightColor();
+    }
+
+    float eps = 0.0001;
+    if (validSelectedBlock && fs_in.coord.x + eps >= blockSelected.x && fs_in.coord.x - eps < blockSelected.x + 1) {
+        if (fs_in.coord.y + eps >= blockSelected.y && fs_in.coord.y - eps < blockSelected.y + 1) {
+            if (fs_in.coord.z + eps >= blockSelected.z && fs_in.coord.z - eps < blockSelected.z + 1) {
+                lightColor += vec3(0.3f, 0.3f, 0.3f);
+            }
+        }
     }
     
     // Directional
