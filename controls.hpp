@@ -167,7 +167,7 @@ void updateStevePosition() {
         }
     } else {
         if (keys[GLFW_KEY_SPACE] && steveMoveDirections[2]) {
-            stevePos += speed * 1.50f * glm::vec3(0, 1, 0);
+            stevePos += speed * 2.00f * glm::vec3(0, 1, 0);
         }
         if (steveMoveDirections[3]) {
             float t = glfwGetTime() - fallingT;

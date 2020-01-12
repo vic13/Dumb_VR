@@ -14,5 +14,8 @@ void main() {
     float ambient_strength = 1;
     vec3 ambient = ambient_strength * lightColor;
     
+    // Global ambient
+    ambient += vec3(0.1, 0.1, 0.1);
+    
     color = vec4(color0 * ambient, 1);
 }

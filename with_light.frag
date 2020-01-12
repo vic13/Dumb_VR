@@ -80,6 +80,9 @@ void main() {
     // Directional
     lightColor += getLightColor(L_directional_norm, directional_color, 0.0);
     
+    // Global ambient
+    lightColor += vec3(0.1, 0.1, 0.1);
+    
     color = vec4(colorBeforeLight * lightColor, 1);
 }
 
