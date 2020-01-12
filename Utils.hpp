@@ -25,8 +25,6 @@ static float mouseDeltaY = 0;
 static float prevMouseX = -1;
 static float prevMouseY = -1;
 
-bool addBlock = false;
-
 float deltaTime = 0.0f;
 int width;
 int height;

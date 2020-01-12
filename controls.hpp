@@ -29,6 +29,8 @@ int steveRotationDirection[2] = { 1, 1 };
 glm::vec3 steveDirection;
 glm::vec3 steveRight;
 bool steveMoving = false;
+bool addBlock = false;
+bool removeBlock = false;
 
 // camera init rotations
 float hAngle = M_PI/2;
@@ -179,6 +181,12 @@ void updateStevePosition() {
     if (keys[GLFW_MOUSE_BUTTON_RIGHT]) {
         keys[GLFW_MOUSE_BUTTON_RIGHT] = false;
         addBlock = true;
+    }
+
+
+    if (keys[GLFW_MOUSE_BUTTON_LEFT]) {
+        keys[GLFW_MOUSE_BUTTON_LEFT] = false;
+        removeBlock = true;
     }
 }
 

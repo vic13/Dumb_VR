@@ -389,13 +389,17 @@ private:
         steveRotationDirection[1] = 1;
     }
 
-    void testAddBlock(glm::ivec3 steveRelCoords, glm::ivec3 steveChunkOrigin) {
-        if (addBlock) {
-            //int heightTest = worldChunks[currentSelectedBlock[1] / 16][0][currentSelectedBlock[5] / 16]->getHeight(currentSelectedBlock[0], currentSelectedBlock[4]);
+    void testAddBlock() {
+        if (addBlock && currentEmptySelectedBlock[0] != -1) {
             worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->setBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4], 1);
-            //int newHeightTest = worldChunks[currentSelectedBlock[1] / 16][0][currentSelectedBlock[5] / 16]->getHeight(currentSelectedBlock[0], currentSelectedBlock[4]);
-            //std::cout << "Height " << heightTest << ", " << newHeightTest << ", " << currentSelectedBlock[2] << std::endl;
             addBlock = false;
+        }
+    }
+
+    void testRemoveBlock() {
+        if (removeBlock && currentNonEmptySelectedBlock[0] != -1) {
+            worldChunks[currentNonEmptySelectedBlock[1] / 16][0][currentNonEmptySelectedBlock[5] / 16]->setBlock(currentNonEmptySelectedBlock[0], currentNonEmptySelectedBlock[2], currentNonEmptySelectedBlock[4], 0);
+            removeBlock = false;
         }
     }
 
@@ -494,7 +498,7 @@ private:
 
             getIntersectedChunkWorldCoordinates(glm::ivec3(blockOriginX, blockOriginY, blockOriginZ), steveChunkOrigin, castedPoint);
             if (castedPoint[0] != -1) {
-                int blockType = worldChunks[castedPoint[1] / 16][castedPoint[3] / 16][castedPoint[5] / 16]->getBlock(castedPoint[0], castedPoint[2], castedPoint[3]);
+                int blockType = worldChunks[castedPoint[1] / 16][castedPoint[3] / 16][castedPoint[5] / 16]->getBlock(castedPoint[0], castedPoint[2], castedPoint[4]);
                 if (blockType) {
                     std::copy(std::begin(castedPoint), std::end(castedPoint), std::begin(currentNonEmptySelectedBlock));
                     currentNonEmptySelectedBlock[6] = 1; // Block is solid aka can only be destructed
@@ -604,7 +608,7 @@ public:
                 }
 
                 else {
- 
+
                     drawnChunksCounter++;
                     this->chunkShader->setMatrix4("m", worldChunks[i][0][j]->getChunkModel());
                     this->chunkShader->setMatrix4("mvp", mvp);
@@ -617,7 +621,8 @@ public:
                         computeSideCollision(steveRelCoords, steveChunkCoordinates, steveWorldCoordinates, steveM, steveLegPoints);
                         computeOutOfBondsCollision(steveWorldCoordinates);
                         castRay(steveRelCoords, steveWorldCoordinates, steveChunkCoordinates, 3);
-                        testAddBlock(steveRelCoords, steveChunkCoordinates);
+                        testAddBlock();
+                        testRemoveBlock();
    
                         //std::cout << "Chunk" << i << ", " << j << std::endl;
                         //std::cout << steveRelCoords.x << ", " << steveRelCoords.z << std::endl;
@@ -644,6 +649,8 @@ public:
 
                         //std::cout << "My chunk" << i*16 << ", " << j*16 << std::endl;
                     }
+
+                    
                 }
             }
         }
