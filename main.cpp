@@ -141,7 +141,7 @@ int main() {
         glm::vec3 flashlightPos = stevePos+(steveHeight*0.7f);
         if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
-                glm::vec3 position = stevePos+steveHeight+2.0f*direction+torchHeight;
+                glm::vec3 position = stevePos+steveHeight+2.0f*cameraDirection+torchHeight;
                 PointLight l = {position, torchColor};
                 torchs.push_back(l);
                 ParticleSource ps = ParticleSource(position, torchColor, glm::vec3(0.5f, 0.5f, 0.5f));
@@ -156,7 +156,7 @@ int main() {
         if (firstPerson) {
             camPos = stevePos;
         } else {
-            camPos = stevePos-direction;
+            camPos = stevePos-cameraDirection;
         }
         
         
@@ -289,7 +289,7 @@ void setModelUniforms(Shader shader, glm::mat4 m, glm::mat4 pv, Material materia
 
 glm::mat4 getP() {
     // Projection matrix : 45° Field of View, width:height ratio, display range : 0.1 unit <-> 4000 units
-    return glm::perspective(glm::radians(45.0f), (float) width / (float)height, 0.1f, 4000.0f);
+    return glm::perspective(glm::radians(80.0f), (float) width / (float)height, 0.1f, 4000.0f);
       
     // Or, for an ortho camera :
     //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
@@ -304,9 +304,9 @@ glm::mat4 getV(bool skybox) {
     glm::vec3 camPos;
     if (firstPerson) {
         camPos = steveHeadPos;
-        lookAt = camPos+direction;
+        lookAt = camPos+cameraDirection;
     } else {
-        camPos = steveHeadPos-5.0f*direction;
+        camPos = steveHeadPos-5.0f*cameraDirection;
         lookAt = steveHeadPos;
     }
     

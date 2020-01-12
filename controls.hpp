@@ -17,26 +17,26 @@ float steveLegPoints[12] = { -0.182274, 0.003461, 0.320455,   // BACK RIGHT
                               0.182274, 0.003461, -0.328637 }; // FRONT LEFT
 
 
-float steveBodyPoints[12] = {-0.302274, 0.003461, 0.650455,   // BACK RIGHT
-                             -0.30274, 0.003461, -0.65863,   // BACK LEFT
-                              0.302274, 0.003461, 0.650455,   // FRONT RIGHT
-                              0.302274, 0.003461, -0.658637 }; // FRONT LEFT
+float steveBodyPoints[12] = {-0.152274, 0.003461, 0.520455,   // BACK RIGHT
+                             -0.152274, 0.003461, -0.52863,   // BACK LEFT
+                              0.152274, 0.003461, 0.520455,   // FRONT RIGHT
+                              0.152274, 0.003461, -0.528637 }; // FRONT LEFT
+
 
 float steveRotation = 0.0f;
-
 int steveMoveDirections[6] = { 1, 1, 1, 1, 1, 1 };
 int steveRotationDirection[2] = { 1, 1 };
-
 glm::vec3 steveDirection;
 glm::vec3 steveRight;
+bool steveMoving = false;
 
 // camera init rotations
 float hAngle = M_PI/2;
 float vAngle = 0;
 
 // camera speed and rotation speed
-float speedSlow = 0.1;
-float speedBoost = 0.5;
+float speedSlow = 0.06;
+float speedBoost = 0.1;
 float superSpeedBoost = 5;
 float speed = speedSlow;
 float rotationSpeed = 0.01;
@@ -51,7 +51,7 @@ float fallingT = 0;
 
 float flashlightLatency = 0.9;
 glm::vec3 flashlightDirection;
-glm::vec3 direction;
+glm::vec3 cameraDirection;
 glm::vec3 planeDirection;
 glm::vec3 right;
 glm::vec3 up;
@@ -114,20 +114,22 @@ glm::vec3 updateDirectionWithCollision(int moveDir, glm::vec3 direction) {
 
 void updateStevePosition() {
     planeDirection = glm::normalize(glm::vec3(steveDirection.x, 0, steveDirection.z));
-
-    
+    steveMoving = false;
     
     if (keys[GLFW_KEY_W]) {
-       
+        steveMoving = true;
         stevePos += speed * updateDirectionWithCollision(1, planeDirection);
     }
     if (keys[GLFW_KEY_S]) {
+        steveMoving = true;
         stevePos -= speed * updateDirectionWithCollision(-1, planeDirection);
     }
     if (keys[GLFW_KEY_D]) {
+        steveMoving = true;
         stevePos+=speed * updateDirectionWithCollision(1, steveRight);
     }
     if (keys[GLFW_KEY_A]) {
+        steveMoving = true;
         stevePos-=speed * updateDirectionWithCollision(-1, steveRight);;
     }
     
@@ -156,14 +158,14 @@ void updateStevePosition() {
     }
     if (!fallingEnabled) {
         if (keys[GLFW_KEY_SPACE] && steveMoveDirections[2]) {
-            stevePos+=speed*glm::vec3(0,1,0);
+            stevePos += speed * 1.50f * glm::vec3(0,1,0);
         }
         if (keys[GLFW_KEY_C]) {
             stevePos-=speed*glm::vec3(0,1,0);
         }
     } else {
         if (keys[GLFW_KEY_SPACE] && steveMoveDirections[2]) {
-            stevePos += speed * glm::vec3(0, 1, 0);
+            stevePos += speed * 1.50f * glm::vec3(0, 1, 0);
         }
         if (steveMoveDirections[3]) {
             float t = glfwGetTime() - fallingT;
@@ -172,10 +174,16 @@ void updateStevePosition() {
             //std::cout << v << std::endl;
         }
     }
+
+
+    if (keys[GLFW_MOUSE_BUTTON_RIGHT]) {
+        keys[GLFW_MOUSE_BUTTON_RIGHT] = false;
+        addBlock = true;
+    }
 }
 
 void updateCameraLock() {
-    if (keys[GLFW_KEY_T]) {
+    if (keysPressed[GLFW_KEY_T]) {
         keysPressed[GLFW_KEY_T] = false;
         cameraLock = !cameraLock;
     }
@@ -210,15 +218,18 @@ void updateCameraRotation() {
             }
         }
 
+        if (firstPerson) {
+            hAngle = steveRotation + M_PI / 2;
+        }
+
         mouseDeltaX = 0.0;
         mouseDeltaY = 0.0;
 
-        direction = glm::vec3(
+        cameraDirection = glm::vec3(
             cos(vAngle) * sin(hAngle),
             sin(vAngle),
             cos(vAngle) * cos(hAngle)
         );
-
 
         steveDirection = glm::vec3(
             cos(vAngle) * sin(steveRotation + M_PI / 2),
@@ -226,13 +237,9 @@ void updateCameraRotation() {
             cos(vAngle) * cos(steveRotation + M_PI / 2)
         );
 
-        std::cout << "steve Dir " << steveDirection.x << ", " << steveDirection.z << std::endl;
-        std::cout << "steve Rot " << steveRotation << std::endl;
-
         right = glm::vec3(sin(hAngle - M_PI / 2.0f), 0, cos(hAngle - M_PI / 2.0f));
         steveRight = glm::vec3(sin(steveRotation), 0, cos(steveRotation));
 
-        std::cout << "steve Right " << steveRight.x << ", " << steveRight.z << std::endl;
-        up = glm::cross(right, direction);
+        up = glm::cross(right, cameraDirection);
     }
 }

@@ -103,6 +103,7 @@ private:
 		int i = 0;
 		int xNegativeMerge[4] = { 0, 0, 0, 0 };
 		int yNegativeMerge[4] = { 0, 0, 0, 0 };
+        vertices.clear();
 
 		// View from negative x and negative y
 		for (int x = 0; x < CX; x++) {
@@ -436,12 +437,12 @@ public:
         return 0;
     }
 
-	//void setBlock(int x, int y, int z, uint8_t blockType) {
- //       if (0 <= x < CX && 0 <= y < CY && 0 <= z < CZ) { // fix
- //           this->block[x][y][z] = blockType;
- //           changed = true;
- //       }
-	//}
+	void setBlock(int x, int y, int z, uint8_t blockType) {
+        if (0 <= x && x < CX && 0 <= y && y < CY && 0 <= z && z < CZ) { 
+            this->block[x][y][z] = blockType;
+            changed = true;
+        }
+	}
 
 	glm::mat4 getChunkModel() {
 		return this->m;
