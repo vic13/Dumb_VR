@@ -463,13 +463,6 @@ private:
 
         while (distance < maxDistance && !foundBlock) {
             if (tMaxX < tMaxY) {
-                //if (tMaxX - 0.1 < tMaxZ && tMaxX + 0.1 > tMaxZ) {
-                //    tMaxX = tMaxX + tDeltaX;
-                //    x += stepX;
-                //    tMaxZ = tMaxZ + tDeltaZ;
-                //    z += stepZ;
-                //}
-
                 if (tMaxX < tMaxZ) {
                     tMaxX = tMaxX + tDeltaX;
                     x += stepX;
@@ -505,7 +498,7 @@ private:
                     //worldChunks[currentSelectedBlock[1] / 16][0][currentSelectedBlock[5] / 16]->setBlock(currentSelectedBlock[0], currentSelectedBlock[2], currentSelectedBlock[4], 5);
                     foundBlock = true;
                 }
-                else if (!foundEmpty)  {
+                else {
                     glm::ivec3 blockCoords = glm::ivec3(castedPoint[0], castedPoint[2], castedPoint[4]);
                     glm::ivec3 blockChunkOrigin = glm::ivec3(castedPoint[1], castedPoint[3], castedPoint[5]);
                     int blockType = 0;
@@ -529,7 +522,6 @@ private:
                     if (blockType) {
                         std::copy(std::begin(castedPoint), std::end(castedPoint), std::begin(currentEmptySelectedBlock));
                         currentEmptySelectedBlock[6] = 0; // Block is not solid, but we can put a block there
-                        foundEmpty = true;
                         //debug = worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->getBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4]);
                         //worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->setBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4], 5);
                     }
@@ -551,6 +543,11 @@ public:
         this->texture = createTexture("chunk.png", true);
         this->chunkShader = &chunkShader;
         initWorld();
+    }
+
+
+    glm::ivec3 getSelectedBlockWorldCoords() {
+        return glm::ivec3(currentEmptySelectedBlock[0] + currentEmptySelectedBlock[1], currentEmptySelectedBlock[2] + currentEmptySelectedBlock[3] + yWorldTranslation, currentEmptySelectedBlock[4] + currentEmptySelectedBlock[5]);
     }
 
     void render(glm::mat4 &pv, Material chunkMaterial, glm::mat4 steveM, glm::vec3 steveHeight) {
@@ -582,14 +579,14 @@ public:
         
         int startChunkZ = std::max(0, steveChunkCoordinates.z / CZ - drawingDistance);
         int endChunkZ = std::min(defaultSize, steveChunkCoordinates.z / CZ + drawingDistance);
-
+        
+        bool selectedValidBlock = false;
+        glm::vec4 selectedBlock = glm::vec4(0, 0, 0, 0);
 
         for (int i = startChunkX; i < endChunkX; i++) {
             for (int j = startChunkZ; j < endChunkZ; j++) {
                 mvp = pv * worldChunks[i][0][j]->getChunkModel();
                 coords = mvp * chunkMiddle;
-
-                //glm::vec4 testDebug = worldChunks[i][0][j]->getChunkModel() * chunkMiddle;
                 
                 totalChunksCounter++;
 
@@ -609,11 +606,6 @@ public:
 
                 else {
 
-                    drawnChunksCounter++;
-                    this->chunkShader->setMatrix4("m", worldChunks[i][0][j]->getChunkModel());
-                    this->chunkShader->setMatrix4("mvp", mvp);
-                    worldChunks[i][0][j]->render();
-
                     if (i * CX <= steveChunkCoordinates.x && (i + 1) * CX > steveChunkCoordinates.x && j * CZ <= steveChunkCoordinates.z && (j+1) * CZ > steveChunkCoordinates.z) {
                         glm::ivec3 steveRelCoords = getSteveChunkPosition(steveChunkCoordinates, steveWorldCoordinates, steveM);  // Only x and Z and relative to the current chunk
                         resetSteveBlockedDirectionsRotation();
@@ -623,6 +615,11 @@ public:
                         castRay(steveRelCoords, steveWorldCoordinates, steveChunkCoordinates, 3);
                         testAddBlock();
                         testRemoveBlock();
+
+                        if (currentNonEmptySelectedBlock[0] != -1) {
+                            selectedValidBlock = true;
+                            selectedBlock = glm::vec4(currentNonEmptySelectedBlock[0], currentNonEmptySelectedBlock[2], currentNonEmptySelectedBlock[4], 1);
+                        }
    
                         //std::cout << "Chunk" << i << ", " << j << std::endl;
                         //std::cout << steveRelCoords.x << ", " << steveRelCoords.z << std::endl;
@@ -646,10 +643,17 @@ public:
 
                         steveLastRel = steveRelCoords;
 
-
-                        //std::cout << "My chunk" << i*16 << ", " << j*16 << std::endl;
                     }
 
+                    drawnChunksCounter++;
+                    this->chunkShader->setMatrix4("m", worldChunks[i][0][j]->getChunkModel());
+                    this->chunkShader->setMatrix4("mvp", mvp);
+                    this->chunkShader->setInteger("validSelectedBlock", selectedValidBlock);
+                    this->chunkShader->setVector4f("blockSelected", selectedBlock);
+                    if (selectedValidBlock) {
+                        selectedValidBlock = false;
+                    }
+                    worldChunks[i][0][j]->render();
                     
                 }
             }
