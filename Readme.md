@@ -1,20 +1,15 @@
-sol plat, blocs individuels, player --> João
-cicle jour nuit : équations de lumière (couleur en fonction de l'heure de la journée)  --> Victor
-
-normal mapping --> Victor
-
-colision detection v1: objets (pas en hauteur) --> João
-
-23 décembre
+# Voxel Realm (VR) PROJECT!
 
 
-rotation objet sur lui-même
-quaternion
-vue 3ème personne
-bump map eau
+# Controls
 
-
-particle systems
-shadows
-
-colision detection v2: sauter sur des objets
+ - **T**: Locks the Camera
+ - **F5**: Switch between first person and third person view
+ - **F4**: Lock the player rotation (not the camera)
+ - **F3**: Center the third person camera
+ - **WASD**: Move the player
+ - **Space**: Jump (Climb if gravity disabled)
+ - **F**: Toggle gravity
+ - **Mouse RIGHT**: Add currently selected block (used numeric keys to change between block types)
+ - **Mouse LEFT**: Remove highlighted block
+ - **1234567**: Switch between the different types of block the player can add.
