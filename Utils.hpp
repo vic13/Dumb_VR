@@ -152,14 +152,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     prevMouseY = ypos;
 
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-        //glfwSetCursorPos(window, width / 2, height / 2);
-        //prevMouseX = width / 2;
-        //prevMouseY = height / 2;
-        if (xpos < 0 || xpos > width || ypos < -20 || ypos > height) {
-            glfwSetCursorPos(window, width / 2, height / 2);
-            prevMouseX = width / 2;
-            prevMouseY = height / 2;
-        }
+        glfwSetCursorPos(window, width / 2, height / 2);
+        prevMouseX = width / 2;
+        prevMouseY = height / 2;
+        //if (xpos < 0 || xpos > width || ypos < -20 || ypos > height) {
+        //    glfwSetCursorPos(window, width / 2, height / 2);
+        //    prevMouseX = width / 2;
+        //    prevMouseY = height / 2;
+        //}
 	#else
 		if (xpos < 0 || xpos > width / 2 || ypos < -20 || ypos > height / 2) {
 			glfwSetCursorPos(window, width / 4, height / 4);

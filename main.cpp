@@ -85,8 +85,8 @@ int main() {
     lightShaderModels.push_back(&cube);
     lightShaderModels.push_back(&sphere);
     
-    Model bumpCube = Model("bump_cube", true, glm::vec3(30, 0, -30), 5, {0.3, 0.4, 0.3, 5}, true, false);
-    Model bumpCube2 = Model("bump_cube", true, glm::vec3(45, 0, -15), 5, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube = Model("bump_cube", true, glm::vec3(190, 18, 70), 5, {0.3, 0.4, 0.3, 5}, true, false);
+    Model bumpCube2 = Model("bump_cube", true, glm::vec3(230, 15, 70), 5, {0.3, 0.4, 0.3, 5}, true, false);
     bumpShaderModels.push_back(&bumpCube);
     bumpShaderModels.push_back(&bumpCube2);
     
@@ -105,7 +105,7 @@ int main() {
     Model steve = Model("steve", true, glm::vec3(0, 0, 0), 0.7, {0.4, 0.5, 0.1, 5});
 
     Material chunkMaterial = {0.3, 0.3, 0.001, 0.001};
-    World world = World(5, chunkShader);  // Change Map Size here
+    World world = World(MAPSIZE, chunkShader); 
     
     GLuint flashlight_tex = createTexture("VR_Assets/Textures/flashlight.png", true);
     
@@ -138,6 +138,7 @@ int main() {
         updateCameraLock();
         updateCameraRotation();
         updateFlashLight();
+        updateSteveInteractions();
         glm::vec3 flashlightPos = stevePos+(steveHeight*0.7f);
         if (torchs.size() < maxNbTorchs) {
             if (addLight()) {
@@ -185,20 +186,6 @@ int main() {
             lightSourceShader.setVector3f("lightColor", 2*modelPointer->color.x, 2*modelPointer->color.y, 2*modelPointer->color.z);
             modelPointer->Draw(lightSourceShader);
         }
-        //for (std::vector<ParticleSource>::iterator it = particleSources.begin(); it != particleSources.end(); ++it) {
-        //    it->updateParticles();
-        //    for (Particle p : it->getParticles()) {
-        //        float theta = glm::acos(glm::dot(planeDirection, glm::vec3(1, 0, 0)));
-        //        if (planeDirection.z > 0) {
-        //            theta *= -1;
-        //        }
-        //        particleModel.updateM(p.position, theta, glm::vec3(0, 1, 0));
-        //        lightSourceShader.setVector3f("lightColor", p.color.x, p.color.y, p.color.z);
-
-        //        lightSourceShader.setMatrix4("mvp", pv * particleModel.m);
-        //        particleModel.Draw(lightSourceShader);
-        //    }
-        //}
 
 
         for (unsigned int i = 0; i<particleSources.size(); i++) {

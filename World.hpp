@@ -5,7 +5,7 @@
 #include "Shader.hpp"
 
 static const glm::vec4 chunkMiddle = glm::vec4(CX / 2, CY / 2, CZ / 2, 1);
-static const int drawingDistance = 5;
+static const int drawingDistance = 20;
 static const int yWorldTranslation = 2;
 
 
@@ -19,10 +19,9 @@ private:
 
     glm::vec4 steveLastPos = glm::vec4(stevePos, 1); 
     glm::ivec3 steveLastRel = glm::ivec3(0, 0, 0);
-    glm::vec4 steveLastDir = glm::vec4(0.0);
     glm::ivec3 steveLastChunk = glm::ivec3(0, 0, 0);
-    int currentEmptySelectedBlock[7] = { -1, -1, -1, -1, -1, -1, -1 };
-    int currentNonEmptySelectedBlock[7] = { -1, -1, -1, -1, -1, -1, -1 };
+    int currentEmptySelectedBlock[6] = { -1, -1, -1, -1, -1, -1 };
+    int currentNonEmptySelectedBlock[6] = { -1, -1, -1, -1, -1, -1};
     int debug;
 
 
@@ -77,7 +76,7 @@ private:
 
 
 
-        if ((blockXMin < steveXMin && blockXMax > steveXMin) || (blockXMin < steveXMax && blockXMax > steveXMax)) {  // compare height
+        if ((blockXMin < steveXMin && blockXMax > steveXMin) || (blockXMin < steveXMax && blockXMax > steveXMax)) {  
             if ((blockZMin < steveZMin && blockZMax > steveZMin) || (blockZMin < steveZMax && blockZMax > steveZMax)) {
                 firstTest = true;
             }
@@ -92,11 +91,6 @@ private:
             projectedSteveCoords[i] = steveCoords[i] / fabs(glm::cos(steveAngle));
             projectedSteveCoords[i + 1] = steveCoords[i + 1];
             projectedSteveCoords[i + 2] = steveCoords[i + 2] * fabs(glm::cos(steveAngle));
-            
-            //if (steveMoving) {  Works kinda meh, can create weird collisions
-            //    blockCoords[i] = blockCoords[i] - dirX * 0.2;
-            //    blockCoords[i + 2] = blockCoords[i + 2] - dirZ * 0.2;
-            //}
 
             projectedBlockCoords[i] = blockCoords[i] / fabs(glm::cos(steveAngle));
             projectedBlockCoords[i + 1] = blockCoords[i + 1];
@@ -114,7 +108,7 @@ private:
         blockZMax = std::max(projectedBlockCoords[2], std::max(projectedBlockCoords[5], std::max(projectedBlockCoords[8], projectedBlockCoords[11])));
 
 
-        if ((blockXMin < steveXMin && blockXMax > steveXMin) || (blockXMin < steveXMax && blockXMax > steveXMax)) {  // compare height
+        if ((blockXMin < steveXMin && blockXMax > steveXMin) || (blockXMin < steveXMax && blockXMax > steveXMax)) {  
             if ((blockZMin < steveZMin && blockZMax > steveZMin) || (blockZMin < steveZMax && blockZMax > steveZMax)) {
                 return true;
             }
@@ -131,7 +125,7 @@ private:
     glm::ivec3 objectChunkCoordinates(glm::vec4 objCoordinates) {
         int x = getChunkAxisOriginWorldCoordinates(objCoordinates.x, CX);
         int z = getChunkAxisOriginWorldCoordinates(objCoordinates.z, CX);
-        return glm::ivec3(x, objCoordinates.y, z);
+        return glm::ivec3(x, 2, z);  //glm::ivec3(x, objCoordinates.y, z);
     }
 
     void computeBlockCorners(float* blockWorldPoints, glm::vec3 blockWorldOrigin) {
@@ -268,8 +262,6 @@ private:
     }
 
     void computeSideCollision(glm::ivec3 steveRelCoords, glm::ivec3 steveChunkOrigin, glm::vec4 steveWorldCoordinates, glm::mat4 steveM, float* steveBoundingBoxPoints) {
-        glm::vec4 steveDirection = steveWorldCoordinates - steveLastPos;
-        steveLastDir.y = steveDirection.y;
         float steveWorldLegPoints[12];
         glm::vec4 pointsContainer;
         glm::vec4 worldPointsContainer;
@@ -292,7 +284,7 @@ private:
                 for (int j = -1; j < 2; j++) {
                     if (i != 0 || j != 0) {
                         nextBlock = getNextChunkCoordinates(steveRelCoords, steveChunkOrigin, i, j, steveRelCoords.y + height);
-                        if (nextBlock.x != -1 && nextBlock.z != -1 && worldChunks[nextBlock.y / 16][0][nextBlock.w / 16]->getBlock(nextBlock.x, steveRelCoords.y + height, nextBlock.z)) { // the + 1 corresponds to the height I need to test 
+                        if (nextBlock.x != -1 && nextBlock.z != -1 && worldChunks[nextBlock.y / 16][0][nextBlock.w / 16]->getBlock(nextBlock.x, steveRelCoords.y + height, nextBlock.z)) { // the + height corresponds to the height I need to test 
                             computeBlockCorners(blockWorldPoints, glm::vec3(nextBlock.x + nextBlock.y, 0, nextBlock.z + nextBlock.w));
                             collision = testCollisionBetweenChunkSteve(blockWorldPoints, steveWorldLegPoints, steveRotation, i, j);
 
@@ -338,17 +330,14 @@ private:
     }
 
 
-    glm::ivec3 getSteveChunkPosition(glm::ivec3 chunkOrigin, glm::vec4 steveWorldCoordinates, glm::mat4 steveM) {
-        glm::vec4 steveDirection = steveWorldCoordinates - steveLastPos;
-        steveLastDir.y = steveDirection.y;
+    glm::ivec3 getSteveChunkPosition(glm::ivec3 chunkOrigin, glm::vec4 steveWorldCoordinates, glm::mat4 steveM, float* steveLegsBoudingBox) {
         float steveWorldLegPoints[12];
-
 
         glm::vec4 pointsContainer;
         glm::vec4 worldPointsContainer;
 
         for (int i = 0; i <= 9; i += 3) {
-            pointsContainer = glm::vec4(steveLegPoints[i], steveLegPoints[i + 1], steveLegPoints[i + 2], 1);
+            pointsContainer = glm::vec4(steveLegsBoudingBox[i], steveLegsBoudingBox[i + 1], steveLegsBoudingBox[i + 2], 1);
             worldPointsContainer = steveM * pointsContainer;
             steveWorldLegPoints[i] = worldPointsContainer.x;
             steveWorldLegPoints[i + 1] = worldPointsContainer.y;
@@ -356,31 +345,26 @@ private:
         }
 
         float blockWorldPoints[12];
+        //Compute collision between Steve and the block he was in in the previous frame
         computeBlockCorners(blockWorldPoints, chunkOrigin + steveLastRel);
         bool collision = testCollisionBetweenChunkSteve(blockWorldPoints, steveWorldLegPoints, steveRotation, 0, 0);
 
-        if (collision) {
-            steveLastRel.y = steveWorldCoordinates.y - yWorldTranslation - 1; // Steve may have jumped
+
+        if (collision) { // Steve is still in the same block
+            steveLastRel.y = steveWorldCoordinates.y - yWorldTranslation - 1; // Steve may have jumped so we update the y coordinate
             return steveLastRel;
         }
-        else {
+
+        else { // Steve no longer in the same block
             int x = floor(steveWorldCoordinates.x - chunkOrigin.x);
             int z = floor(steveWorldCoordinates.z - chunkOrigin.z);
             steveLastChunk = objectChunkCoordinates(steveWorldCoordinates);
             return glm::ivec3(x, steveWorldCoordinates.y - yWorldTranslation - 1, z);
         }
-        // Add test to make sure position only changes to a new block that is in the same direction as the movement direction  
-        //if (steveDirection.x) {
-        //    steveLastDir.x = steveDirection.x;
-        //}
-
-        //if (steveDirection.z) {
-        //    steveLastDir.z = steveDirection.z;
-        //}
-
     }
 
     void resetSteveBlockedDirectionsRotation() {
+        //This method resets the global variables that state if Steve is currently block in any give direction
         steveMoveDirections[0] = 1;
         steveMoveDirections[1] = 1;
         steveMoveDirections[4] = 1;
@@ -391,7 +375,10 @@ private:
 
     void testAddBlock() {
         if (addBlock && currentEmptySelectedBlock[0] != -1) {
-            worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->setBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4], 1);
+            worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->setBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4], selectedBlockType);
+            addBlock = false;
+        }
+        else if (addBlock) {
             addBlock = false;
         }
     }
@@ -399,6 +386,9 @@ private:
     void testRemoveBlock() {
         if (removeBlock && currentNonEmptySelectedBlock[0] != -1) {
             worldChunks[currentNonEmptySelectedBlock[1] / 16][0][currentNonEmptySelectedBlock[5] / 16]->setBlock(currentNonEmptySelectedBlock[0], currentNonEmptySelectedBlock[2], currentNonEmptySelectedBlock[4], 0);
+            removeBlock = false;
+        }
+        else if (removeBlock) {
             removeBlock = false;
         }
     }
@@ -443,15 +433,8 @@ private:
        
         std::vector<glm::ivec3> castedPoints;
 
-        //if (currentEmptySelectedBlock[0] != -1) {
-        //    worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->setBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4], debug);
-        //}
         
         float tMaxX, tMaxY, tMaxZ, tDeltaX, tDeltaY, tDeltaZ;
-
-        //tMaxX = computeRayTMax(x, stepX, rayDir.x);
-        //tMaxY = computeRayTMax(y, stepY, rayDir.y);
-        //tMaxZ = computeRayTMax(z, stepZ, rayDir.z);
 
         tDeltaX = tMaxX = fabs(1 / rayDir.x);
         tDeltaY = tMaxY = fabs(1 / rayDir.y);
@@ -494,8 +477,6 @@ private:
                 int blockType = worldChunks[castedPoint[1] / 16][castedPoint[3] / 16][castedPoint[5] / 16]->getBlock(castedPoint[0], castedPoint[2], castedPoint[4]);
                 if (blockType) {
                     std::copy(std::begin(castedPoint), std::end(castedPoint), std::begin(currentNonEmptySelectedBlock));
-                    currentNonEmptySelectedBlock[6] = 1; // Block is solid aka can only be destructed
-                    //worldChunks[currentSelectedBlock[1] / 16][0][currentSelectedBlock[5] / 16]->setBlock(currentSelectedBlock[0], currentSelectedBlock[2], currentSelectedBlock[4], 5);
                     foundBlock = true;
                 }
                 else {
@@ -521,9 +502,6 @@ private:
                     }
                     if (blockType) {
                         std::copy(std::begin(castedPoint), std::end(castedPoint), std::begin(currentEmptySelectedBlock));
-                        currentEmptySelectedBlock[6] = 0; // Block is not solid, but we can put a block there
-                        //debug = worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->getBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4]);
-                        //worldChunks[currentEmptySelectedBlock[1] / 16][0][currentEmptySelectedBlock[5] / 16]->setBlock(currentEmptySelectedBlock[0], currentEmptySelectedBlock[2], currentEmptySelectedBlock[4], 5);
                     }
                     else {
                         int noBlock[7] = { -1, -1, -1, -1, -1, -1, -1 };
@@ -540,7 +518,7 @@ private:
 public:
     World(int defaultSize, Shader& chunkShader) {
         this->defaultSize = defaultSize;
-        this->texture = createTexture("chunk.png", true);
+        this->texture = createTexture("VR_Assets/Textures/chunk.png", true);
         this->chunkShader = &chunkShader;
         initWorld();
     }
@@ -552,67 +530,79 @@ public:
 
     void render(glm::mat4 &pv, Material chunkMaterial, glm::mat4 steveM, glm::vec3 steveHeight) {
         glEnable(GL_CULL_FACE);  // Order of the vertices matters because of this. Vertices need to be placed in a clock-wise manner otherwise they won't be displayed. Read more at https://en.wikipedia.org/wiki/Back-face_culling
-        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_DEPTH_TEST);  // Activate depth test
 
+        //We send/activate the chunks texture and material only once per frame
         std::string name = "texture_diffuse";
         std::string number = "1";
-        const GLchar* uniformName = (name + number).c_str();
-
+        std::string uniformNameString = (name + number);
+        const GLchar* uniformName = uniformNameString.c_str();
         glActiveTexture(GL_TEXTURE0);
         glUniform1i(glGetUniformLocation(chunkShader->ID, uniformName), 0);
         glBindTexture(GL_TEXTURE_2D, this->texture);
+        setModelUniforms(*chunkShader, chunkMaterial);
 
         glm::vec4 coords;
         glm::mat4 mvp;
-        setModelUniforms(*chunkShader, chunkMaterial);
 
-        
         int totalChunksCounter = 0;
         int drawnChunksCounter = 0;
 
-        glm::vec4 steveWorldCoordinates = steveM * glm::vec4(0, 0, 0, 1);
-        //glm::ivec3 steveChunkCoordinates = objectChunkCoordinates(steveWorldCoordinates);  // Coordinates of the Chunk origin
-        glm::ivec3 steveChunkCoordinates = steveLastChunk;  // Coordinates of the Chunk origin
 
-        int startChunkX = std::max(0,  steveChunkCoordinates.x / CX - drawingDistance);
-        int endChunkX = std::min(defaultSize, steveChunkCoordinates.x / CX + drawingDistance);
+        glm::vec4 steveWorldCoordinates = steveM * glm::vec4(0, 0, 0, 1);  // Get the current world coordinates from the player into a vec4
+
+        glm::ivec3 steveChunkRenderCoordinates = objectChunkCoordinates(steveWorldCoordinates);  // Coordinates of the Chunk Origin Steve is currently in
+        glm::ivec3 steveChunkCoordinates = steveLastChunk;  // Coordinates of the Chunk Origin Steve was in in the previous frame
+
+
+        // Compute the chunks we should display according to the drawing distance
+        int startChunkX = std::max(0, steveChunkRenderCoordinates.x / CX - drawingDistance);
+        int endChunkX = std::min(defaultSize, steveChunkRenderCoordinates.x / CX + drawingDistance);
+        int startChunkZ = std::max(0, steveChunkRenderCoordinates.z / CZ - drawingDistance);
+        int endChunkZ = std::min(defaultSize, steveChunkRenderCoordinates.z / CZ + drawingDistance);
         
-        int startChunkZ = std::max(0, steveChunkCoordinates.z / CZ - drawingDistance);
-        int endChunkZ = std::min(defaultSize, steveChunkCoordinates.z / CZ + drawingDistance);
-        
-        bool selectedValidBlock = false;
+        // These will be passed to the Frag Shader to highlight the current block
+        bool selectedValidBlock = false;  
         glm::vec4 selectedBlock = glm::vec4(0, 0, 0, 0);
+
+        // If steve is flying fast, the Chunk he was previously in may stop being rendered. In that case, we no longer compute collision which is bad .To fix this, if in one frame we didn't compute collision, then we update the steveLastChunk position 
+        bool flyingSteve = true; 
 
         for (int i = startChunkX; i < endChunkX; i++) {
             for (int j = startChunkZ; j < endChunkZ; j++) {
                 mvp = pv * worldChunks[i][0][j]->getChunkModel();
                 coords = mvp * chunkMiddle;
-                
                 totalChunksCounter++;
 
                 // Compute NDC coordinates for x and y
                 coords.x /= coords.w;  
                 coords.y /= coords.w;
 
-                
-
-                if (coords.z < -16) {
+                if (coords.z < - CZ/2) {  // Chunk is behind the camera so we can discard it 
                     continue;
                 }
 
-                else if ((coords.x < -1.0 - (28 / fabsf(coords.w)) || coords.x > 1.0  + (28 / fabsf(coords.w)) || coords.y < -1.0 - (28 / fabsf(coords.w)) || coords.y > 1.0 + (28 / fabsf(coords.w)))) {  //Why 28 works??
+                else if ((coords.x < -1.0 - (40 / fabsf(coords.w)) || coords.x > 1.0  + (40 / fabsf(coords.w)) || coords.y < -1.0 - (40 / fabsf(coords.w)) || coords.y > 1.0 + (40 / fabsf(coords.w)))) { //Chunk is outside of the screen, no need to draw it 
                     continue;
                 }
 
                 else {
 
-                    if (i * CX <= steveChunkCoordinates.x && (i + 1) * CX > steveChunkCoordinates.x && j * CZ <= steveChunkCoordinates.z && (j+1) * CZ > steveChunkCoordinates.z) {
-                        glm::ivec3 steveRelCoords = getSteveChunkPosition(steveChunkCoordinates, steveWorldCoordinates, steveM);  // Only x and Z and relative to the current chunk
+                    // If we are drawing the Chunk steve is currently in, then we need to compute collisions
+                    if (i * CX <= steveChunkCoordinates.x && (i + 1) * CX > steveChunkCoordinates.x && j * CZ <= steveChunkCoordinates.z && (j+1) * CZ > steveChunkCoordinates.z ) {  
+                        flyingSteve = false;
+                        glm::ivec3 steveRelCoords = getSteveChunkPosition(steveChunkCoordinates, steveWorldCoordinates, steveM, steveLegPoints);  // Only x and Z and relative to the current chunk
+                        
                         resetSteveBlockedDirectionsRotation();
+
+                        // We test collision with two different bounding boxes to try to improve the collision precision
                         computeSideCollision(steveRelCoords, steveChunkCoordinates, steveWorldCoordinates, steveM, steveBodyPoints);
                         computeSideCollision(steveRelCoords, steveChunkCoordinates, steveWorldCoordinates, steveM, steveLegPoints);
+
                         computeOutOfBondsCollision(steveWorldCoordinates);
                         castRay(steveRelCoords, steveWorldCoordinates, steveChunkCoordinates, 3);
+
+
                         testAddBlock();
                         testRemoveBlock();
 
@@ -620,13 +610,8 @@ public:
                             selectedValidBlock = true;
                             selectedBlock = glm::vec4(currentNonEmptySelectedBlock[0], currentNonEmptySelectedBlock[2], currentNonEmptySelectedBlock[4], 1);
                         }
-   
-                        //std::cout << "Chunk" << i << ", " << j << std::endl;
-                        //std::cout << steveRelCoords.x << ", " << steveRelCoords.z << std::endl;
 
                         int blockHeight = worldChunks[i][0][j]->getHeight(steveRelCoords.x, steveRelCoords.z) + yWorldTranslation;
-                        
-
                         if (steveWorldCoordinates.y - 1 < blockHeight && steveMoveDirections[3]) {
                             stevePos.y = blockHeight + 1;
                             steveMoveDirections[3] = 0;
@@ -634,12 +619,12 @@ public:
                         else if (steveWorldCoordinates.y - 1 > blockHeight && !steveMoveDirections[3]){
                             fallingT = glfwGetTime();
                             steveMoveDirections[3] = 1;
+                            steveLastChunk = steveChunkRenderCoordinates;
                         }
-                        //else if (steveWorldCoordinates.y - 1 < blockHeight) {
-                        //    stevePos.y = blockHeight + 1;
-                        //    steveMoveDirections[3] = 0;
-                        //    std::cout << "DEBUG" << std::endl;
-                        //}
+
+                        else if (steveWorldCoordinates.y - 1 > blockHeight) {
+                            steveLastChunk = steveChunkRenderCoordinates;
+                        }
 
                         steveLastRel = steveRelCoords;
 
@@ -650,9 +635,11 @@ public:
                     this->chunkShader->setMatrix4("mvp", mvp);
                     this->chunkShader->setInteger("validSelectedBlock", selectedValidBlock);
                     this->chunkShader->setVector4f("blockSelected", selectedBlock);
-                    if (selectedValidBlock) {
+
+                    if (selectedValidBlock && currentNonEmptySelectedBlock[1]/16 == i && currentNonEmptySelectedBlock[5]/16 == j) {
                         selectedValidBlock = false;
                     }
+
                     worldChunks[i][0][j]->render();
                     
                 }
@@ -660,7 +647,9 @@ public:
         }
 
         steveLastPos = steveWorldCoordinates;
-        //std::cout << "Total Chunks: " << totalChunksCounter << ", Drawn Chunks: " << drawnChunksCounter << std::endl;
+        if (flyingSteve) {
+            steveLastChunk = steveChunkRenderCoordinates;
+        }
     }
 
     void setModelUniforms(Shader shader, Material material) {

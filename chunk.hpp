@@ -85,6 +85,22 @@ private:
         else if (blockType == 5) {  // WATER
             return 8;
         }
+
+        else if (blockType == 6) { //TNT
+            if (direction.x == -1 || direction.z == -1 || direction.x == 1 || direction.z == 1) {
+                return 11;
+            }
+            else if (direction.y == 1) {
+                return 12;
+            }
+            else {
+                return 13;
+            }
+        }
+
+        else if (blockType == 7) { // WOOD
+            return 5;
+        }
     }
 
     bool isVisible(int x, int y, int z, int neighX, int neighY, int neighZ) {
@@ -341,6 +357,7 @@ private:
 	}
 
     static float create2DNoise(int numIterations, int x, int y, int seed, float persistence, float scale, float low, float high) {
+        // https://cmaher.github.io/posts/working-with-simplex-noise/
         float maxAmp = 0;
         float amp = 1.0;
         float freq = scale;
@@ -361,6 +378,7 @@ private:
     }
 
     static int create3DNoise(int numIterations, int x, int y, int z, int seed, float persistence, float scale, float low, float high) {
+        // https://cmaher.github.io/posts/working-with-simplex-noise/
         float maxAmp = 0;
         float amp = 1.0;
         float freq = scale;
@@ -398,7 +416,7 @@ public:
         this->chunkCenter = glm::vec4(x + CX / 2, y + CY / 2, z + CZ / 2, 1);
         elements = 0;
         changed = true;
-        noise(5000);
+        noise(MAPSEED);
         negX = nullptr;
         posX = nullptr;
         negZ = nullptr;
@@ -430,7 +448,7 @@ public:
 
     int getHeight(int x, int z) {
         for (int i = CY - 1; i >= 0; i--) {
-            if (this->block[x][i][z]) {
+            if (this->getBlock(x, i, z)) {
                 return i;
             }
         }
@@ -441,6 +459,23 @@ public:
         if (0 <= x && x < CX && 0 <= y && y < CY && 0 <= z && z < CZ) { 
             this->block[x][y][z] = blockType;
             changed = true;
+
+            if (x == 0 && negX != nullptr) {
+                negX->askUpdate();
+            }
+            else if (x == CX - 1 && posX != nullptr) {
+                posX->askUpdate();
+            }
+
+
+            if (z == 0 && negZ != nullptr) {
+                negZ->askUpdate();
+            }
+            else if (z == CX - 1 && posZ != nullptr) {
+                posZ->askUpdate();
+            }
+
+
         }
 	}
 
@@ -516,6 +551,11 @@ public:
         changed = true;
     }
 
+    void askUpdate() {
+        this->changed = true;
+    }
+
+
 	void render() {
 		if (changed) {
 			update();
@@ -530,17 +570,4 @@ public:
 		glBindVertexArray(0);
 	}
 
-	void renderMultiple() {
-		if (changed) {
-			update();
-		}
-
-		// If this chunk is empty, we don't need to draw anything.
-		if (!elements)
-			return;
-        
-		glBindVertexArray(this->VAO);
-		glDrawArrays(GL_TRIANGLES, 0, elements);
-		glBindVertexArray(0);
-	}
 };

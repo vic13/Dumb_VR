@@ -19,6 +19,9 @@ namespace
 #define CY 16
 #define CZ 16
 
+#define MAPSIZE 40
+
+#define MAPSEED 5000
 
 
 static const glm::vec3 xDirection = glm::vec3(1, 0, 0);

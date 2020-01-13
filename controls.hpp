@@ -8,7 +8,6 @@ bool flashlightOn = false;
 // character (Steve) init position
 glm::vec3 stevePos = glm::vec3(0, 18, 0);
 glm::vec4 steveFront = glm::vec4(1, 0, 0, 0);
-//glm::vec4 steveRight = glm::vec4(0, 0, 1, 0);
 
 
 float steveLegPoints[12] = { -0.182274, 0.003461, 0.320455,   // BACK RIGHT
@@ -31,6 +30,7 @@ glm::vec3 steveRight;
 bool steveMoving = false;
 bool addBlock = false;
 bool removeBlock = false;
+int selectedBlockType = 1;
 
 // camera init rotations
 float hAngle = M_PI/2;
@@ -39,7 +39,7 @@ float vAngle = 0;
 // camera speed and rotation speed
 float speedSlow = 0.06;
 float speedBoost = 0.1;
-float superSpeedBoost = 5;
+float superSpeedBoost = 1.5;
 float speed = speedSlow;
 float rotationSpeed = 0.01;
 
@@ -173,11 +173,11 @@ void updateStevePosition() {
             float t = glfwGetTime() - fallingT;
             float v = g * t;
             stevePos -= v * glm::vec3(0, 1, 0);
-            //std::cout << v << std::endl;
         }
     }
+}
 
-
+void updateSteveInteractions() {
     if (keys[GLFW_MOUSE_BUTTON_RIGHT]) {
         keys[GLFW_MOUSE_BUTTON_RIGHT] = false;
         addBlock = true;
@@ -188,6 +188,42 @@ void updateStevePosition() {
         keys[GLFW_MOUSE_BUTTON_LEFT] = false;
         removeBlock = true;
     }
+
+    if (keys[GLFW_KEY_1]) {
+        keys[GLFW_KEY_1] = false;
+        selectedBlockType = 1;
+    }
+
+    if (keys[GLFW_KEY_2]) {
+        keys[GLFW_KEY_2] = false;
+        selectedBlockType = 2;
+    }
+
+    if (keys[GLFW_KEY_3]) {
+        keys[GLFW_KEY_3] = false;
+        selectedBlockType = 3;
+    }
+
+    if (keys[GLFW_KEY_4]) {
+        keys[GLFW_KEY_4] = false;
+        selectedBlockType = 4;
+    }
+
+    if (keys[GLFW_KEY_5]) {
+        keys[GLFW_KEY_5] = false;
+        selectedBlockType = 5;
+    }
+
+    if (keys[GLFW_KEY_6]) {
+        keys[GLFW_KEY_6] = false;
+        selectedBlockType = 6;
+    }
+
+    if (keys[GLFW_KEY_7]) {
+        keys[GLFW_KEY_7] = false;
+        selectedBlockType = 7;
+    }
+
 }
 
 void updateCameraLock() {
