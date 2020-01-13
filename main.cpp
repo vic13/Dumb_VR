@@ -50,9 +50,8 @@ int main() {
     GLFWwindow* mWindow = init_gl();
     float timeValue = glfwGetTime();
     
-    //Enable blending (alpha)
-//    glEnable(GL_BLEND);
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);  // Face Culling
+    glEnable(GL_DEPTH_TEST);  // Activate depth test
     
     
     // Shaders

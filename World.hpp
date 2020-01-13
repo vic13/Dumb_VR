@@ -529,8 +529,6 @@ public:
     }
 
     void render(glm::mat4 &pv, Material chunkMaterial, glm::mat4 steveM, glm::vec3 steveHeight) {
-        glEnable(GL_CULL_FACE);  // Order of the vertices matters because of this. Vertices need to be placed in a clock-wise manner otherwise they won't be displayed. Read more at https://en.wikipedia.org/wiki/Back-face_culling
-        glEnable(GL_DEPTH_TEST);  // Activate depth test
 
         //We send/activate the chunks texture and material only once per frame
         std::string name = "texture_diffuse";
